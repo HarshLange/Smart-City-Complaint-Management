@@ -1,0 +1,35 @@
+{
+  "architecture": "EfficientNetV2-S",
+  "weights": "ImageNet pretrained",
+  "class_names": [
+    "damaged_road",
+    "garbage",
+    "pothole",
+    "streetlight_failure",
+    "water_leak"
+  ],
+  "class_to_idx": {
+    "damaged_road": 0,
+    "garbage": 1,
+    "pothole": 2,
+    "streetlight_failure": 3,
+    "water_leak": 4
+  },
+  "input_size": [
+    224,
+    224
+  ],
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "device": "cuda:0",
+  "parameter_count": 20183893,
+  "trainable_parameter_count": 20183893
+}

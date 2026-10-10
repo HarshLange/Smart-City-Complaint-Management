@@ -1,0 +1,38 @@
+import enum
+
+
+class UserRole(str, enum.Enum):
+    CITIZEN = "CITIZEN"
+    OFFICER = "OFFICER"
+    ADMIN = "ADMIN"
+
+
+class ComplaintStatus(str, enum.Enum):
+    SUBMITTED = "SUBMITTED"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    ASSIGNED = "ASSIGNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+    REOPENED = "REOPENED"
+
+
+class CivicCategory(str, enum.Enum):
+    DAMAGED_ROAD = "damaged_road"
+    GARBAGE = "garbage"
+    POTHOLE = "pothole"
+    STREETLIGHT_FAILURE = "streetlight_failure"
+    WATER_LEAK = "water_leak"
+    OTHER = "other"
+
+
+class AuditActionType(str, enum.Enum):
+    COMPLAINT_CREATED = "COMPLAINT_CREATED"
+    STATUS_CHANGED = "STATUS_CHANGED"
+    CATEGORY_OVERRIDDEN = "CATEGORY_OVERRIDDEN"
+    DEPARTMENT_REASSIGNED = "DEPARTMENT_REASSIGNED"
+    OFFICER_ASSIGNED = "OFFICER_ASSIGNED"
+    NOTE_ADDED = "NOTE_ADDED"
+    EVIDENCE_UPLOADED = "EVIDENCE_UPLOADED"
+    USER_PROVISIONED = "USER_PROVISIONED"
+    USER_DEACTIVATED = "USER_DEACTIVATED"

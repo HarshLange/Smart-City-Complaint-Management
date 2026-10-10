@@ -1,0 +1,108 @@
+# ==============================================================================
+# SMART CITY COMPLAINT MANAGEMENT SYSTEM - GIT IGNORE
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Environment Variables and Secret Credentials
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.env
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+
+# -----------------------------------------------------------------------------
+# 2. Python Environments, Bytecode, and Test Caches
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+ENV/
+env/
+*.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# -----------------------------------------------------------------------------
+# 3. Node.js & Frontend Dependencies and Build Outputs
+# -----------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# -----------------------------------------------------------------------------
+# 4. Local Databases and SQLite Artifacts
+# -----------------------------------------------------------------------------
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+smart_city.db
+backend/smart_city.db
+
+# -----------------------------------------------------------------------------
+# 5. Local File Uploads, Object Storage, and Temporary Files
+# -----------------------------------------------------------------------------
+backend/storage/uploads/
+backend/storage/evidence/
+backend/storage/temp/
+backend/storage/
+storage/uploads/
+storage/
+*.log
+logs/
+
+# -----------------------------------------------------------------------------
+# 6. Large Backup Archives and Datasets (Never commit to Git)
+# -----------------------------------------------------------------------------
+TP100_FULL_WORKING_BACKUP.zip
+TP100_Deployment_and_Report.zip
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# -----------------------------------------------------------------------------
+# 7. Operating System and IDE Files
+# -----------------------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

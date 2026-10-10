@@ -1,0 +1,23 @@
+{
+  "experiment": "TP100_EfficientNetV2S",
+  "architecture": "EfficientNetV2-S",
+  "selected_checkpoint": "best_model.pt",
+  "best_epoch": 16,
+  "test_images": 1454,
+  "test_accuracy_percent": 99.4498,
+  "test_macro_precision_percent": 99.4706,
+  "test_macro_recall_percent": 99.4184,
+  "test_macro_f1_percent": 99.4423,
+  "input_size": [
+    224,
+    224
+  ],
+  "class_to_idx": {
+    "damaged_road": 0,
+    "garbage": 1,
+    "pothole": 2,
+    "streetlight_failure": 3,
+    "water_leak": 4
+  },
+  "note": "Metrics are from the held-out test set. Apply the preprocessing specified in model_metadata.json."
+}

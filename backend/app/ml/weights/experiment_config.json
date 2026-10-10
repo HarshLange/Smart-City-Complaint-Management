@@ -1,0 +1,73 @@
+{
+  "experiment_name": "TP100_EfficientNetV2S",
+  "dataset_root": "/kaggle/input/datasets/harshlange/classification-tp-100/TP_100",
+  "output_root": "/kaggle/working/SmartCity_Final_Training/TP100",
+  "class_names": [
+    "damaged_road",
+    "garbage",
+    "pothole",
+    "streetlight_failure",
+    "water_leak"
+  ],
+  "num_classes": 5,
+  "image_size": 224,
+  "batch_size": 64,
+  "total_epochs": 500,
+  "checkpoint_every_epochs": 100,
+  "seed": 42,
+  "architecture": "EfficientNetV2-S",
+  "pretrained": true,
+  "optimizer": "AdamW",
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "scheduler": "CosineAnnealingLR",
+  "best_checkpoint_selection": "validation_macro_f1",
+  "augmentation": {
+    "resize": [
+      224,
+      224
+    ],
+    "random_horizontal_flip_probability": 0.5,
+    "random_rotation_degrees": 10,
+    "color_jitter": {
+      "brightness": 0.15,
+      "contrast": 0.15,
+      "saturation": 0.15,
+      "hue": 0.03
+    },
+    "normalization": "ImageNet mean/std"
+  },
+  "split_counts": {
+    "train": {
+      "damaged_road": 1400,
+      "garbage": 1400,
+      "pothole": 1400,
+      "streetlight_failure": 1185,
+      "water_leak": 1400
+    },
+    "valid": {
+      "damaged_road": 300,
+      "garbage": 300,
+      "pothole": 300,
+      "streetlight_failure": 254,
+      "water_leak": 300
+    },
+    "test": {
+      "damaged_road": 300,
+      "garbage": 300,
+      "pothole": 300,
+      "streetlight_failure": 254,
+      "water_leak": 300
+    }
+  },
+  "python_version": "3.13.15",
+  "pytorch_version": "2.11.0+cu128",
+  "torchvision_version": "0.26.0+cu128",
+  "cuda_version": "12.8",
+  "gpu_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "created_utc": "2026-10-09T08:22:50.980156+00:00"
+}
