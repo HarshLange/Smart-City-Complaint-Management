@@ -2,6 +2,12 @@ import { create } from "zustand";
 import { api } from "../api/client";
 import { User } from "../types";
 
+export interface AuthCheckResult {
+  success: boolean;
+  user: User | null;
+  error: string | null;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -9,7 +15,7 @@ interface AuthState {
   login: (credentials: { email: string; password: string }) => Promise<User>;
   register: (data: { email: string; password: string; full_name: string; phone_number?: string }) => Promise<User>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
+  checkAuth: () => Promise<AuthCheckResult>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -17,13 +23,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
 
-  checkAuth: async () => {
+  checkAuth: async (): Promise<AuthCheckResult> => {
+    set({ isLoading: true });
     try {
       const user = await api.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
-    } catch {
+      return { success: true, user, error: null };
+    } catch (err: any) {
       api.setToken(null);
       set({ user: null, isAuthenticated: false, isLoading: false });
+      const errorMsg = err?.message || "Failed to verify authenticated session.";
+      return { success: false, user: null, error: errorMsg };
     }
   },
 

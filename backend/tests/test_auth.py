@@ -186,3 +186,171 @@ async def test_supabase_es256_token_verification(client: AsyncClient, monkeypatc
     assert data["email"] == "supabase.citizen@example.gov"
     assert data["role"] == "CITIZEN"
     assert data["full_name"] == "Supabase Citizen Test"
+
+
+@pytest.mark.asyncio
+async def test_supabase_token_existing_account_same_email(client: AsyncClient, monkeypatch):
+    """Test that a Supabase OAuth token with an email matching an existing account links to that account."""
+    from datetime import datetime, timedelta, timezone
+    from unittest.mock import MagicMock
+    from cryptography.hazmat.primitives.asymmetric import ec
+    import jwt
+    from app.config import settings
+    from app.core import security
+
+    # 1. Existing user registered with password (e.g. seeded citizen@smartcity.gov)
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    public_key = private_key.public_key()
+    mock_jwk = MagicMock()
+    mock_jwk.key = public_key
+    mock_jwks_client = MagicMock()
+    mock_jwks_client.get_signing_key_from_jwt.return_value = mock_jwk
+    monkeypatch.setattr(security, "get_jwks_client", lambda: mock_jwks_client)
+
+    now = datetime.now(timezone.utc)
+    # Supabase token with different sub ID, but identical email to seeded citizen
+    token_payload = {
+        "iss": f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1",
+        "sub": "different-supabase-oauth-uuid-9999",
+        "aud": "authenticated",
+        "exp": int((now + timedelta(hours=1)).timestamp()),
+        "email": "citizen@smartcity.gov",
+        "user_metadata": {"full_name": "Citizen User Updated"},
+    }
+    supabase_token = jwt.encode(
+        token_payload,
+        private_key,
+        algorithm="ES256",
+        headers={"kid": "mock-supabase-key-id"},
+    )
+
+    res = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {supabase_token}"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    # Preserves the existing account's email and role
+    assert data["email"] == "citizen@smartcity.gov"
+    assert data["role"] == "CITIZEN"
+
+
+@pytest.mark.asyncio
+async def test_supabase_token_invalid_or_expired_rejected(client: AsyncClient, monkeypatch):
+    """Test that expired or invalid Supabase tokens return HTTP 401."""
+    from datetime import datetime, timedelta, timezone
+    from unittest.mock import MagicMock
+    from cryptography.hazmat.primitives.asymmetric import ec
+    import jwt
+    from app.config import settings
+    from app.core import security
+
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    public_key = private_key.public_key()
+    mock_jwk = MagicMock()
+    mock_jwk.key = public_key
+    mock_jwks_client = MagicMock()
+    mock_jwks_client.get_signing_key_from_jwt.return_value = mock_jwk
+    monkeypatch.setattr(security, "get_jwks_client", lambda: mock_jwks_client)
+
+    now = datetime.now(timezone.utc)
+
+    # 1. Expired token
+    expired_payload = {
+        "iss": f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1",
+        "sub": "supabase-expired-user",
+        "aud": "authenticated",
+        "exp": int((now - timedelta(minutes=10)).timestamp()),
+        "email": "expired@example.com",
+    }
+    expired_token = jwt.encode(
+        expired_payload,
+        private_key,
+        algorithm="ES256",
+        headers={"kid": "mock-supabase-key-id"},
+    )
+    res_exp = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {expired_token}"})
+    assert res_exp.status_code == 401
+
+    # 2. Invalid issuer token
+    bad_iss_payload = {
+        "iss": "https://malicious-issuer.com/auth/v1",
+        "sub": "supabase-bad-iss-user",
+        "aud": "authenticated",
+        "exp": int((now + timedelta(hours=1)).timestamp()),
+        "email": "attacker@example.com",
+    }
+    bad_iss_token = jwt.encode(
+        bad_iss_payload,
+        private_key,
+        algorithm="ES256",
+        headers={"kid": "mock-supabase-key-id"},
+    )
+    res_iss = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {bad_iss_token}"})
+    assert res_iss.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_supabase_live_auth_api_fallback(client: AsyncClient, monkeypatch):
+    """Test that if JWKS resolution fails, authoritative Supabase Auth API fallback verifies valid tokens."""
+    from unittest.mock import MagicMock
+    from app.core import security
+
+    # Simulate JWKS failure
+    mock_jwks_client = MagicMock()
+    mock_jwks_client.get_signing_key_from_jwt.side_effect = Exception("JWKS network error")
+    monkeypatch.setattr(security, "get_jwks_client", lambda: mock_jwks_client)
+
+    # Mock Supabase Python SDK client response
+    mock_user_obj = MagicMock()
+    mock_user_obj.id = "fallback-user-uuid-8888"
+    mock_user_obj.email = "fallback.citizen@example.gov"
+    mock_user_obj.aud = "authenticated"
+    mock_user_obj.role = "authenticated"
+    mock_user_obj.user_metadata = {"full_name": "Fallback Verified Citizen"}
+    mock_user_obj.app_metadata = {}
+
+    mock_user_response = MagicMock()
+    mock_user_response.user = mock_user_obj
+
+    mock_sb_client = MagicMock()
+    mock_sb_client.auth.get_user.return_value = mock_user_response
+    monkeypatch.setattr(security, "get_supabase_client", lambda: mock_sb_client)
+
+    # Token with kid to indicate Supabase origin
+    dummy_token = (
+        "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3Qta2lkIn0."
+        "eyJzdWIiOiJmYWxsYmFjay11c2VyLXV1aWQtODg4OCJ9."
+        "dummy_signature_for_test"
+    )
+
+    res = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {dummy_token}"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["email"] == "fallback.citizen@example.gov"
+    assert data["role"] == "CITIZEN"
+    assert data["full_name"] == "Fallback Verified Citizen"
+
+
+@pytest.mark.asyncio
+async def test_cors_preflight_for_production_origins(client: AsyncClient):
+    """Verify that OPTIONS preflight requests for project.infalex.com and civicpulse.infalex.com succeed."""
+    for origin in [
+        "https://project.infalex.com",
+        "https://civicpulse.infalex.com",
+        "http://localhost:5173",
+    ]:
+        res = await client.options(
+            "/api/v1/auth/me",
+            headers={
+                "Origin": origin,
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        assert res.status_code == 200
+        assert res.headers.get("access-control-allow-origin") == origin
+        assert "GET" in res.headers.get("access-control-allow-methods", "")

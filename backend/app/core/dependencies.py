@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import Cookie, Depends, Header
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.core.security import decode_access_token
@@ -29,36 +30,58 @@ async def get_current_user(
     if not payload or "sub" not in payload:
         raise UnauthorizedException("Invalid, expired, or malformed authentication token")
 
-    user_id = payload["sub"]
+    user_id = str(payload["sub"])
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
+    # Safely extract email from top-level claims or user_metadata
+    email = (
+        payload.get("email")
+        or (payload.get("user_metadata") or {}).get("email")
+        or ""
+    ).strip().lower()
+
     # If user not found by ID, attempt lookup by email (e.g. pre-existing email account)
-    if not user and "email" in payload:
-        email = payload["email"].lower()
+    if not user and email:
         res_email = await db.execute(select(User).where(User.email == email))
         user = res_email.scalar_one_or_none()
 
     # If user is authenticated via Supabase but profile row doesn't exist, auto-provision Citizen profile
-    if not user and payload.get("aud") == "authenticated" and "email" in payload:
-        user_metadata = payload.get("user_metadata", {})
+    aud = payload.get("aud")
+    is_authenticated = (
+        aud == "authenticated"
+        or (isinstance(aud, list) and "authenticated" in aud)
+        or payload.get("role") == "authenticated"
+    )
+    if not user and is_authenticated and email:
+        user_metadata = payload.get("user_metadata") or {}
         full_name = (
             user_metadata.get("full_name")
             or user_metadata.get("name")
-            or payload["email"].split("@")[0]
-        )
+            or email.split("@")[0]
+        ).strip()
         user = User(
             id=user_id,
-            email=payload["email"].lower(),
+            email=email,
             hashed_password="[SUPABASE_MANAGED_AUTH]",
             full_name=full_name,
             role=UserRole.CITIZEN,  # Invariant: external OAuth sign-in is strictly CITIZEN
             department_id=None,
             is_active=True,
         )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
+        try:
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        except IntegrityError:
+            await db.rollback()
+            # Handle concurrent registration or unique constraint conflict safely
+            res_conflict = await db.execute(
+                select(User).where((User.id == user_id) | (User.email == email))
+            )
+            user = res_conflict.scalar_one_or_none()
+            if not user:
+                raise
 
     if not user:
         raise UnauthorizedException("User account does not exist")
@@ -87,11 +110,53 @@ async def get_optional_user(
     if not payload or "sub" not in payload:
         return None
 
-    result = await db.execute(select(User).where(User.id == payload["sub"]))
+    user_id = str(payload["sub"])
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    if not user and "email" in payload:
-        res_email = await db.execute(select(User).where(User.email == payload["email"].lower()))
+
+    email = (
+        payload.get("email")
+        or (payload.get("user_metadata") or {}).get("email")
+        or ""
+    ).strip().lower()
+
+    if not user and email:
+        res_email = await db.execute(select(User).where(User.email == email))
         user = res_email.scalar_one_or_none()
+
+    aud = payload.get("aud")
+    is_authenticated = (
+        aud == "authenticated"
+        or (isinstance(aud, list) and "authenticated" in aud)
+        or payload.get("role") == "authenticated"
+    )
+    if not user and is_authenticated and email:
+        user_metadata = payload.get("user_metadata") or {}
+        full_name = (
+            user_metadata.get("full_name")
+            or user_metadata.get("name")
+            or email.split("@")[0]
+        ).strip()
+        user = User(
+            id=user_id,
+            email=email,
+            hashed_password="[SUPABASE_MANAGED_AUTH]",
+            full_name=full_name,
+            role=UserRole.CITIZEN,
+            department_id=None,
+            is_active=True,
+        )
+        try:
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        except IntegrityError:
+            await db.rollback()
+            res_conflict = await db.execute(
+                select(User).where((User.id == user_id) | (User.email == email))
+            )
+            user = res_conflict.scalar_one_or_none()
+
     return user if user and user.is_active else None
 
 

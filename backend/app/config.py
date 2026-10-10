@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Supabase credentials (server-side only)
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
+    SUPABASE_JWT_SECRET: str = ""
     SUPABASE_STORAGE_BUCKET: str = "complaint-images"
 
     # Storage backend: 'supabase' or 'local'
@@ -48,6 +49,8 @@ class Settings(BaseSettings):
 
     # CORS
     ALLOWED_CORS_ORIGINS: Union[List[str], str] = [
+        "https://project.infalex.com",
+        "https://civicpulse.infalex.com",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -70,7 +73,12 @@ class Settings(BaseSettings):
                 return [i.strip() for i in v.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
-        return ["http://localhost:5173", "http://127.0.0.1:5173"]
+        return [
+            "https://project.infalex.com",
+            "https://civicpulse.infalex.com",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
 
     @field_validator("ALLOWED_IMAGE_TYPES", mode="before")
     @classmethod

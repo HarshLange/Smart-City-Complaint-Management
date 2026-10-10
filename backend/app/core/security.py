@@ -1,3 +1,4 @@
+import logging
 import secrets
 import string
 from datetime import datetime, timedelta, timezone
@@ -5,6 +6,8 @@ from typing import Any, Dict, Optional
 import bcrypt
 import jwt
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 ALGORITHM = "HS256"
 
@@ -52,6 +55,7 @@ def create_access_token(
 
 
 _jwks_client: Optional[jwt.PyJWKClient] = None
+_supabase_client = None
 
 
 def get_jwks_client() -> Optional[jwt.PyJWKClient]:
@@ -63,20 +67,48 @@ def get_jwks_client() -> Optional[jwt.PyJWKClient]:
     return _jwks_client
 
 
+def get_supabase_client():
+    """Lazy initialize Supabase client for live fallback token verification."""
+    global _supabase_client
+    if _supabase_client is None and settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        try:
+            import supabase
+            _supabase_client = supabase.create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+        except Exception as e:
+            logger.warning("Failed to initialize Supabase client for auth fallback: %s", e)
+    return _supabase_client
+
+
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Decode and validate signed JWT access token.
     
     Supports:
     1. Supabase-issued asymmetric JWTs (ES256, RS256) verified via live JWKS.
-    2. Locally-issued symmetric JWTs (HS256) verified via settings.SECRET_KEY.
+    2. Supabase-issued symmetric JWTs (HS256) verified via settings.SUPABASE_JWT_SECRET if configured.
+    3. Live fallback verification via Supabase Auth API if JWKS/signature resolution fails.
+    4. Locally-issued symmetric JWTs (HS256) verified via settings.SECRET_KEY.
     """
-    # 1. Check if token was issued by Supabase (ES256 / RS256 / kid header present)
+    if not token or not isinstance(token, str):
+        return None
+
+    # Determine token header metadata
+    alg = None
+    kid = None
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+        alg = unverified_header.get("alg")
+        kid = unverified_header.get("kid")
+    except Exception:
+        pass
+
+    # 1. Supabase verification
     if settings.SUPABASE_URL:
-        try:
-            unverified_header = jwt.get_unverified_header(token)
-            alg = unverified_header.get("alg", "")
-            kid = unverified_header.get("kid")
-            if kid or alg in ("ES256", "RS256"):
+        base_supabase = settings.SUPABASE_URL.rstrip("/")
+        valid_issuers = [f"{base_supabase}/auth/v1", base_supabase]
+
+        # 1a. Asymmetric ES256 / RS256 verification via JWKS
+        if kid or alg in ("ES256", "RS256"):
+            try:
                 client = get_jwks_client()
                 if client:
                     signing_key = client.get_signing_key_from_jwt(token)
@@ -85,12 +117,48 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
                         signing_key.key,
                         algorithms=["ES256", "RS256"],
                         audience="authenticated",
-                        issuer=f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1",
+                        issuer=valid_issuers,
                     )
                     return payload
-        except (jwt.PyJWTError, Exception):
-            # Continue to local verification fallback or reject
-            pass
+            except jwt.PyJWTError as e:
+                logger.warning("JWKS verification failed for Supabase token: %s", e)
+            except Exception as e:
+                logger.warning("Unexpected error during JWKS resolution: %s", e)
+
+        # 1b. Symmetric HS256 verification via SUPABASE_JWT_SECRET
+        supabase_jwt_secret = getattr(settings, "SUPABASE_JWT_SECRET", "")
+        if supabase_jwt_secret and alg == "HS256":
+            try:
+                payload = jwt.decode(
+                    token,
+                    supabase_jwt_secret,
+                    algorithms=["HS256"],
+                    audience="authenticated",
+                    issuer=valid_issuers,
+                )
+                return payload
+            except jwt.PyJWTError:
+                pass
+
+        # 1c. Authoritative Supabase Auth API fallback
+        # If the token is from Supabase (kid present, ES256/RS256, or claims Supabase origin)
+        if (kid or alg in ("ES256", "RS256")) and settings.SUPABASE_KEY:
+            try:
+                sb_client = get_supabase_client()
+                if sb_client:
+                    user_res = sb_client.auth.get_user(token)
+                    if user_res and user_res.user:
+                        sb_u = user_res.user
+                        return {
+                            "sub": str(sb_u.id),
+                            "email": sb_u.email,
+                            "user_metadata": sb_u.user_metadata or {},
+                            "app_metadata": sb_u.app_metadata or {},
+                            "aud": getattr(sb_u, "aud", "authenticated") or "authenticated",
+                            "role": getattr(sb_u, "role", "authenticated") or "authenticated",
+                        }
+            except Exception as e:
+                logger.warning("Supabase live auth verification fallback failed: %s", e)
 
     # 2. Locally signed HS256 token verification
     try:

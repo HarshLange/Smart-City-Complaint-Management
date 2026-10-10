@@ -62,6 +62,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_CORS_ORIGINS,
+    allow_origin_regex=r"^https:\/\/([a-zA-Z0-9-]+\.)*infalex\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

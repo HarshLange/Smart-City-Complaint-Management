@@ -35,6 +35,7 @@ export const AuthCallbackPage: React.FC = () => {
         }
 
         if (authError) {
+          api.setToken(null);
           setStatus("error");
           setErrorMessage(decodeURIComponent(authError).replace(/\+/g, " "));
           return;
@@ -49,11 +50,19 @@ export const AuthCallbackPage: React.FC = () => {
         }
 
         if (accessToken) {
-          // Store token in client storage
+          // Temporarily stage token in client storage to allow /auth/me request
           api.setToken(accessToken);
 
-          // Synchronize profile and establish active application session
-          await checkAuth();
+          // Synchronize profile and verify identity with municipal backend
+          const result = await checkAuth();
+
+          if (!result.success || !result.user) {
+            // Identity verification failed: purge token immediately to avoid broken session state
+            api.setToken(null);
+            setStatus("error");
+            setErrorMessage(result.error || "Failed to establish authenticated citizen session with municipal backend.");
+            return;
+          }
 
           // Clean sensitive tokens from browser URL history after successful handshake
           try {
@@ -70,9 +79,11 @@ export const AuthCallbackPage: React.FC = () => {
         }
 
         // If no token or error present
+        api.setToken(null);
         setStatus("error");
         setErrorMessage("No valid authentication session token was returned from the identity provider.");
       } catch (err: any) {
+        api.setToken(null);
         setStatus("error");
         setErrorMessage(err.message || "Failed to establish authenticated session.");
       }

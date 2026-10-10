@@ -47,10 +47,20 @@ class ApiClient {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+      });
+    } catch (networkErr: any) {
+      if (networkErr instanceof TypeError && networkErr.message.toLowerCase().includes("failed to fetch")) {
+        throw new Error(
+          "Unable to connect to the municipal backend server. Please verify network connectivity or service status."
+        );
+      }
+      throw networkErr;
+    }
 
     if (!response.ok) {
       let errDetail = "Request failed";
@@ -58,7 +68,7 @@ class ApiClient {
         const errorData = await response.json();
         errDetail = errorData.message || errorData.detail || JSON.stringify(errorData);
       } catch {
-        errDetail = response.statusText;
+        errDetail = response.statusText || `Request failed with status ${response.status}`;
       }
       throw new Error(errDetail);
     }
