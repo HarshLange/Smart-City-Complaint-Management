@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import {
   AlertCircle,
   Building2,
+  Calendar,
+  Camera,
   CheckCircle2,
   Clock,
+  ExternalLink,
   FileText,
   Filter,
   MessageSquare,
-  Plus,
   Search,
   Upload,
   UserCheck,
@@ -31,7 +33,7 @@ export const DepartmentWorkspace: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Selected Complaint for Inspection / Action Modal
+  // Selected Complaint for Action Modal
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -40,9 +42,10 @@ export const DepartmentWorkspace: React.FC = () => {
   const [statusNotes, setStatusNotes] = useState("");
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
 
-  // Officer Note State
+  // Officer Note Form State
   const [noteText, setNoteText] = useState("");
   const [noteInternal, setNoteInternal] = useState(true);
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -77,11 +80,9 @@ export const DepartmentWorkspace: React.FC = () => {
     if (!selectedComplaint) return;
     setActionLoading(true);
     try {
-      // 1. If evidence uploaded, save it first
       if (evidenceFile) {
         await api.uploadResolutionEvidence(selectedComplaint.id, evidenceFile);
       }
-      // 2. Update status
       const updated = await api.updateComplaintStatus(
         selectedComplaint.id,
         newStatus,
@@ -101,313 +102,393 @@ export const DepartmentWorkspace: React.FC = () => {
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedComplaint || !noteText.trim()) return;
-    setActionLoading(true);
+    setNoteSubmitting(true);
     try {
       await api.addOfficerNote(selectedComplaint.id, noteText.trim(), noteInternal);
       setNoteText("");
-      // Refresh detail
       const refreshed = await api.getComplaintDetail(selectedComplaint.id);
       setSelectedComplaint(refreshed);
     } catch (err: any) {
-      alert(err.message || "Failed to add officer note.");
+      alert(err.message || "Failed to record officer note.");
     } finally {
-      setActionLoading(false);
+      setNoteSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Workspace Header */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Operational Officer Header */}
+        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
             <div className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-blue-600" />
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                Authorized Department Queue
+              <span className="text-xs font-bold text-gov-navy bg-slate-100 px-2.5 py-0.5 rounded border border-slate-300 uppercase tracking-wider">
+                {user?.department_name || "Assigned Department"}
               </span>
+              <span className="text-xs text-slate-500">• Municipal Field Operations</span>
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              {user?.department_name || "Department Workspace"}
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
+              Department Operations Queue
             </h1>
-            <p className="text-xs text-slate-500">
-              Officer: {user?.full_name} ({user?.email}) • Scoped exclusively to your department cases.
+            <p className="text-xs text-slate-600 mt-0.5">
+              Logged in as <strong className="text-slate-800">{user?.full_name}</strong>. Inspect complaints, assign field crews, record notes, and upload verified completion evidence.
             </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={loadData}
+              className="px-3.5 py-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition"
+            >
+              Refresh Queue
+            </button>
           </div>
         </div>
 
-        {/* Workload Summary Cards */}
+        {/* Real Workload Statistics */}
         {summary && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Total Active Assigned
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">
+                Total Department Tickets
               </span>
-              <span className="text-3xl font-black text-blue-600 mt-1 block">
-                {summary.total_active}
-              </span>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                In Progress Work
-              </span>
-              <span className="text-3xl font-black text-amber-600 mt-1 block">
-                {summary.counts_by_status?.IN_PROGRESS || 0}
+              <span className="text-2xl font-bold text-slate-900 mt-1 block">
+                {summary.total_tickets || 0}
               </span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">
+                Pending / Submitted
+              </span>
+              <span className="text-2xl font-bold text-blue-700 mt-1 block">
+                {summary.pending_tickets || 0}
+              </span>
+            </div>
+
+            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">
+                Active In Progress
+              </span>
+              <span className="text-2xl font-bold text-amber-700 mt-1 block">
+                {summary.in_progress_tickets || 0}
+              </span>
+            </div>
+
+            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">
                 Resolved by Department
               </span>
-              <span className="text-3xl font-black text-emerald-600 mt-1 block">
-                {summary.total_resolved}
+              <span className="text-2xl font-bold text-emerald-700 mt-1 block">
+                {summary.resolved_tickets || 0}
               </span>
             </div>
           </div>
         )}
 
-        {/* Queue Table Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {/* Controls Bar */}
-          <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+        {/* Error Alert */}
+        {error && (
+          <div
+            role="alert"
+            className="p-4 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-start gap-2.5"
+          >
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Filter and Search Bar */}
+        <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <form onSubmit={handleSearch} className="relative flex-1 max-w-md flex gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" aria-hidden="true" />
               <input
                 type="text"
-                placeholder="Search reference, title, description..."
+                placeholder="Search reference, description, address..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                className="w-full pl-9 pr-3 py-1.5 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white"
               />
-            </form>
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-              <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              {["ALL", "ASSIGNED", "IN_PROGRESS", "RESOLVED"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                    statusFilter === status
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {status === "ALL" ? "All Queue" : status.replace("_", " ")}
-                </button>
-              ))}
             </div>
+            <button
+              type="submit"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold text-slate-700"
+            >
+              Filter
+            </button>
+          </form>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="officer-status-select" className="text-xs font-medium text-slate-600 shrink-0">
+              Filter Queue:
+            </label>
+            <select
+              id="officer-status-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2.5 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+            >
+              <option value="ALL">All Department Tickets</option>
+              <option value="SUBMITTED">Newly Submitted</option>
+              <option value="UNDER_REVIEW">Under Review</option>
+              <option value="ASSIGNED">Assigned to Crew</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+            </select>
           </div>
+        </div>
 
-          {/* Complaints Table */}
+        {/* Operational Case Table */}
+        <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-xs text-slate-400">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              Loading department queue...
+            <div className="p-12 text-center">
+              <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-xs text-slate-500">Retrieving operational tickets...</p>
             </div>
-          ) : error ? (
-            <div className="p-8 text-center text-xs text-rose-600">{error}</div>
           ) : complaints.length === 0 ? (
-            <div className="p-12 text-center space-y-2">
-              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No complaints are currently pending in this queue for your department.
+            <div className="p-12 text-center max-w-md mx-auto space-y-2">
+              <FileText className="w-8 h-8 text-slate-400 mx-auto" aria-hidden="true" />
+              <h2 className="text-sm font-bold text-slate-800">Queue is Clear</h2>
+              <p className="text-xs text-slate-500">
+                No active complaints match the selected filter in your department's jurisdiction.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
-              {complaints.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-4 sm:p-6 hover:bg-slate-50/80 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse gov-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Date Logged</th>
+                    <th scope="col">Issue Title</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Assigned Officer</th>
+                    <th scope="col" className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {complaints.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                      <td className="font-mono text-xs font-semibold text-slate-800 whitespace-nowrap">
                         {c.reference_number}
-                      </span>
-                      <StatusBadge status={c.status} />
-                      <CategoryBadge category={c.category} />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900">{c.title}</h3>
-                    <p className="text-xs text-slate-500 line-clamp-1 max-w-2xl">
-                      {c.description}
-                    </p>
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                      <span>Reporter: {c.citizen_name || "Anonymous"}</span>
-                      <span>•</span>
-                      <span>Address: {c.address || "Territory"}</span>
-                      <span>•</span>
-                      <span>Received: {new Date(c.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setSelectedComplaint(c);
-                      setNewStatus(c.status === "ASSIGNED" ? "IN_PROGRESS" : "RESOLVED");
-                    }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shrink-0 transition"
-                  >
-                    Open Action Panel
-                  </button>
-                </div>
-              ))}
+                      </td>
+                      <td className="text-xs text-slate-500 whitespace-nowrap">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="max-w-xs truncate font-medium text-slate-900">
+                        {c.title}
+                      </td>
+                      <td>
+                        <CategoryBadge category={c.category} />
+                      </td>
+                      <td className="text-xs font-bold uppercase text-slate-700 whitespace-nowrap">
+                        {c.priority}
+                      </td>
+                      <td>
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td className="text-xs text-slate-600 whitespace-nowrap">
+                        {c.assigned_officer_name || "Unassigned"}
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedComplaint(c);
+                            setNewStatus(c.status);
+                          }}
+                          className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
+                        >
+                          Manage Case
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Action Panel Modal */}
-        {selectedComplaint && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6">
-              {/* Header */}
-              <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                      {selectedComplaint.reference_number}
-                    </span>
-                    <StatusBadge status={selectedComplaint.status} />
-                    <CategoryBadge category={selectedComplaint.category} />
-                  </div>
-                  <h2 className="text-lg font-bold text-slate-900">{selectedComplaint.title}</h2>
+      {/* Structured Officer Action Modal */}
+      {selectedComplaint && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-case-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-4xl w-full p-6 space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase block">
+                  Department Inspection • {selectedComplaint.reference_number}
+                </span>
+                <h3 id="modal-case-title" className="text-lg font-bold text-slate-900 mt-0.5">
+                  {selectedComplaint.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedComplaint(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                aria-label="Close dialog"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Case Details & Citizen Evidence */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  Defect Description & Location
+                </span>
+                <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded border border-slate-200 whitespace-pre-wrap leading-relaxed">
+                  {selectedComplaint.description}
+                </p>
+                <div className="text-xs text-slate-600 space-y-0.5 bg-slate-50 p-3 rounded border border-slate-200">
+                  <p><strong>Address:</strong> {selectedComplaint.address || "Not specified"}</p>
+                  {selectedComplaint.landmark && <p><strong>Landmark:</strong> {selectedComplaint.landmark}</p>}
+                  {selectedComplaint.latitude && selectedComplaint.longitude && (
+                    <p className="font-mono text-[11px] text-slate-500">
+                      GPS: {selectedComplaint.latitude.toFixed(5)}, {selectedComplaint.longitude.toFixed(5)}
+                    </p>
+                  )}
+                  <p className="pt-1 text-slate-500">
+                    Complainant: <strong>{selectedComplaint.citizen_name || "Citizen"}</strong> ({selectedComplaint.citizen_email || "Email verified"})
+                  </p>
                 </div>
-                <button
-                  onClick={() => setSelectedComplaint(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
 
-              {/* Description & Photo */}
-              <div className="space-y-4 text-xs">
-                <div>
-                  <span className="font-semibold text-slate-700 uppercase block mb-1">
-                    Description & Location
-                  </span>
-                  <p className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedComplaint.description}
-                  </p>
-                  <div className="mt-2 text-slate-500">
-                    Location: {selectedComplaint.address || "Not specified"} • Landmark:{" "}
-                    {selectedComplaint.landmark || "None"}
-                  </div>
-                </div>
-
-                {/* Defect Photograph */}
-                {selectedComplaint.attachments?.find((a) => !a.is_resolution_evidence) && (
-                  <div>
-                    <span className="font-semibold text-slate-700 uppercase block mb-1">
-                      Defect Photograph
-                    </span>
-                    <div className="rounded-xl overflow-hidden border border-slate-200 max-h-60 bg-slate-100 flex items-center justify-center">
-                      <img
-                        src={selectedComplaint.attachments.find((a) => !a.is_resolution_evidence)?.access_url}
-                        alt="Defect"
-                        className="max-h-60 object-contain"
-                      />
-                    </div>
+              <div>
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
+                  Citizen Uploaded Image
+                </span>
+                {selectedComplaint.attachments?.find((a) => !a.is_resolution_evidence)?.access_url ? (
+                  <img
+                    src={selectedComplaint.attachments.find((a) => !a.is_resolution_evidence)!.access_url}
+                    alt="Citizen defect submission"
+                    className="w-full max-h-56 object-contain rounded border border-slate-300 bg-slate-900"
+                  />
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
+                    No image available
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Status Transition Control Form */}
-              <form onSubmit={handleUpdateStatus} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Update Case Status
-                </h3>
+            {/* Form 1: Status Progression & Resolution Evidence */}
+            <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-4">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-2">
+                Update Ticket Lifecycle Status
+              </span>
 
+              <form onSubmit={handleUpdateStatus} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      New Status
+                    <label htmlFor="update-status" className="block text-xs font-semibold text-slate-800 mb-1">
+                      New Operational Status
                     </label>
                     <select
+                      id="update-status"
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs font-medium bg-white focus:ring-2 focus:ring-blue-700"
                     >
-                      <option value="IN_PROGRESS">IN_PROGRESS (Crew Dispatched)</option>
-                      <option value="RESOLVED">RESOLVED (Repairs Finished)</option>
-                      <option value="UNDER_REVIEW">UNDER_REVIEW (Requires Assessment)</option>
+                      <option value="ASSIGNED">ASSIGNED (Dispatch Field Crew)</option>
+                      <option value="IN_PROGRESS">IN_PROGRESS (Under Active Repair)</option>
+                      <option value="RESOLVED">RESOLVED (Repairs Completed)</option>
+                      <option value="CLOSED">CLOSED (Final Administrative Sign-off)</option>
                     </select>
                   </div>
 
-                  {newStatus === "RESOLVED" && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Resolution Photo Proof (Optional)
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
-                        className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <label htmlFor="evidence-file" className="block text-xs font-semibold text-slate-800 mb-1">
+                      Completion Photo Evidence (Optional)
+                    </label>
+                    <input
+                      id="evidence-file"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border file:border-slate-300 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-100"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Transition / Resolution Notes
+                  <label htmlFor="status-notes" className="block text-xs font-semibold text-slate-800 mb-1">
+                    Status Transition Notes (Visible to Complainant)
                   </label>
                   <textarea
+                    id="status-notes"
                     rows={2}
-                    placeholder="Enter details about repair actions or field inspection results..."
                     value={statusNotes}
                     onChange={(e) => setStatusNotes(e.target.value)}
-                    required={newStatus === "RESOLVED"}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    placeholder="e.g. Asphalt crew completed patch repair. Road re-opened for traffic."
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold disabled:opacity-50 transition"
-                >
-                  {actionLoading ? "Updating Status..." : "Apply Status Update"}
-                </button>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold disabled:opacity-50"
+                  >
+                    {actionLoading ? "Saving Status..." : "Apply Status Update"}
+                  </button>
+                </div>
               </form>
+            </div>
 
-              {/* Add Internal Note */}
-              <form onSubmit={handleAddNote} className="space-y-3 pt-2 border-t border-slate-100">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Add Internal Officer Note
-                </h3>
+            {/* Form 2: Internal Investigation Note */}
+            <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-3">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-2">
+                Add Officer Investigation Note
+              </span>
+
+              <form onSubmit={handleAddNote} className="space-y-3">
                 <textarea
                   rows={2}
-                  placeholder="Private internal note visible only to municipal officers..."
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  placeholder="Record internal findings, material requisitions, or field updates..."
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                 />
-                <button
-                  type="submit"
-                  disabled={actionLoading || !noteText.trim()}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition"
-                >
-                  Save Internal Note
-                </button>
-              </form>
 
-              {/* Timeline */}
-              <div className="pt-2 border-t border-slate-100 space-y-2">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Timeline History
-                </h3>
-                <Timeline history={selectedComplaint.status_history} />
-              </div>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={noteInternal}
+                      onChange={(e) => setNoteInternal(e.target.checked)}
+                      className="rounded border-slate-300 text-blue-700 focus:ring-blue-700"
+                    />
+                    <span>Mark as Internal Note (hidden from citizen tracking)</span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={noteSubmitting || !noteText.trim()}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-xs font-semibold disabled:opacity-50"
+                  >
+                    {noteSubmitting ? "Saving..." : "Record Note"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

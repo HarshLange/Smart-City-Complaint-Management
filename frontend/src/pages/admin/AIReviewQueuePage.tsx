@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Cpu,
+  ExternalLink,
   FileText,
   Sliders,
   X,
@@ -72,226 +73,288 @@ export const AIReviewQueuePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Navigation Breadcrumb */}
+        <div>
           <Link
             to="/admin"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Admin Console</span>
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Return to Admin Console</span>
           </Link>
         </div>
 
-        {/* Title Card */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center gap-2 text-indigo-600">
-            <Cpu className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest">
-              Human-in-the-Loop Review
+        {/* Header Notice Card */}
+        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel space-y-2">
+          <div className="flex items-center gap-2 text-gov-navy">
+            <Cpu className="w-4 h-4 text-blue-700" aria-hidden="true" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Exception Handling & Quality Control
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             AI Classification Review Queue
           </h1>
-          <p className="text-xs text-slate-500 max-w-3xl leading-relaxed">
-            Complaints flagged due to low model confidence (&lt;80%), borderline feature ambiguity, or inference failure. Authoritative administrator review ensures reliable department dispatch without blind automatic routing.
+          <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+            Tickets flagged due to low model confidence (&lt;80%), visual ambiguity, or image preprocessing warnings. Authoritative administrator review ensures proper department assignment without unverified automatic routing.
           </p>
         </div>
 
-        {/* Review Queue List */}
-        {loading ? (
-          <div className="p-12 text-center text-xs text-slate-400">
-            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Loading review queue...
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-xs text-rose-600 bg-white rounded-2xl border border-rose-200">
-            {error}
-          </div>
-        ) : queue.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-            <h3 className="text-base font-bold text-slate-900">Review Queue Empty</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              All complaints have been high-confidence classified or verified by administrators.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {queue.map((c) => {
-              const photo = c.attachments?.find((a) => !a.is_resolution_evidence);
-              const conf = c.ai_prediction ? (c.ai_prediction.confidence_score * 100).toFixed(1) : "0.0";
-
-              return (
-                <div
-                  key={c.id}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col justify-between"
-                >
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        {c.reference_number}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <StatusBadge status={c.status} />
-                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>Conf: {conf}%</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-base font-bold text-slate-900">{c.title}</h3>
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                      {c.description}
-                    </p>
-
-                    {/* Defect Photo Preview */}
-                    {photo ? (
-                      <div className="rounded-xl overflow-hidden border border-slate-200 max-h-48 bg-slate-100 flex items-center justify-center">
-                        <img
-                          src={photo.access_url}
-                          alt="Defect"
-                          className="max-h-48 w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
-                        No photograph attached
-                      </div>
-                    )}
-
-                    <div className="p-3 bg-slate-50 rounded-xl text-xs space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Predicted Class:</span>
-                        <strong className="text-slate-800 capitalize">
-                          {c.ai_prediction?.predicted_category || "Unclassified"}
-                        </strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Suggested Dept:</span>
-                        <span className="font-semibold text-indigo-700">
-                          {c.department_name || "Awaiting Review"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedComplaint(c);
-                        setOverrideCat(c.category);
-                        if (c.department_id) setOverrideDept(c.department_id);
-                      }}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5"
-                    >
-                      <Sliders className="w-3.5 h-3.5" />
-                      <span>Review & Assign Department</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Error Alert */}
+        {error && (
+          <div
+            role="alert"
+            className="p-4 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-start gap-2.5"
+          >
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Override Modal */}
-        {selectedComplaint && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 border border-slate-200 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-bold text-slate-900">
-                  Verify & Route Complaint
+        {/* Queue Table */}
+        <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Flagged Complaints Awaiting Decision ({queue.length})
+            </span>
+            <button
+              type="button"
+              onClick={loadData}
+              className="text-xs text-blue-700 hover:underline font-semibold"
+            >
+              Refresh Queue
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-xs text-slate-500">
+              Loading review queue items...
+            </div>
+          ) : queue.length === 0 ? (
+            <div className="p-12 text-center max-w-md mx-auto space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" aria-hidden="true" />
+              <h2 className="text-sm font-bold text-slate-800">Queue is Clear</h2>
+              <p className="text-xs text-slate-500">
+                All submitted complaints currently meet model confidence thresholds or have already been reviewed.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse gov-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Date Logged</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Assigned Category</th>
+                    <th scope="col">Model Confidence</th>
+                    <th scope="col">Suggested Dept</th>
+                    <th scope="col" className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {queue.map((c) => {
+                    const conf = c.ai_prediction?.confidence_score;
+                    const isLowConf = conf !== null && conf !== undefined && conf < 0.8;
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-50/80 transition text-xs">
+                        <td className="font-mono font-semibold text-slate-800 whitespace-nowrap">
+                          {c.reference_number}
+                        </td>
+                        <td className="text-slate-500 whitespace-nowrap">
+                          {new Date(c.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="max-w-xs truncate font-medium text-slate-900">
+                          {c.title}
+                        </td>
+                        <td>
+                          <CategoryBadge category={c.category} />
+                        </td>
+                        <td>
+                          {conf !== null && conf !== undefined ? (
+                            <span
+                              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                                isLowConf
+                                  ? "bg-amber-50 text-amber-800 border-amber-300"
+                                  : "bg-emerald-50 text-emerald-800 border-emerald-300"
+                              }`}
+                            >
+                              {(conf * 100).toFixed(1)}% {isLowConf ? "(Low)" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">Manual / N/A</span>
+                          )}
+                        </td>
+                        <td className="text-slate-700 whitespace-nowrap">
+                          {c.ai_prediction?.suggested_department_code || c.department_code || "UNASSIGNED"}
+                        </td>
+                        <td className="text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedComplaint(c);
+                              setOverrideCat(c.category);
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded"
+                          >
+                            Review & Override
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Override Action Modal */}
+      {selectedComplaint && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="override-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-2xl w-full p-6 space-y-5 my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase block">
+                  AI Review Decision • {selectedComplaint.reference_number}
+                </span>
+                <h3 id="override-title" className="text-base font-bold text-slate-900 mt-0.5">
+                  {selectedComplaint.title}
                 </h3>
-                <button
-                  onClick={() => setSelectedComplaint(null)}
-                  className="p-1 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedComplaint(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                aria-label="Close dialog"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Evidence & Prediction Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <span className="text-slate-500 block mb-1 font-medium">Citizen Submitted Image</span>
+                {selectedComplaint.attachments?.find((a) => !a.is_resolution_evidence)?.access_url ? (
+                  <img
+                    src={selectedComplaint.attachments.find((a) => !a.is_resolution_evidence)!.access_url}
+                    alt="Citizen defect submission"
+                    className="w-full max-h-48 object-contain rounded border border-slate-300 bg-slate-900"
+                  />
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
+                    No image available
+                  </div>
+                )}
               </div>
 
-              <div className="text-xs text-slate-600 space-y-1">
-                <div>Case: <strong className="text-slate-900">{selectedComplaint.reference_number}</strong></div>
-                <div>Title: {selectedComplaint.title}</div>
-              </div>
+              <div className="space-y-2.5">
+                <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                  <span className="text-slate-500 block">Current AI Prediction</span>
+                  <div className="mt-1 flex items-center gap-2">
+                    <CategoryBadge category={selectedComplaint.category} />
+                    {selectedComplaint.ai_prediction?.confidence_score !== undefined && (
+                      <span className="font-semibold text-slate-700">
+                        ({(selectedComplaint.ai_prediction.confidence_score * 100).toFixed(1)}%)
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-              <form onSubmit={handleApplyOverride} className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                  <span className="text-slate-500 block">Issue Description</span>
+                  <p className="mt-1 text-slate-800 leading-relaxed max-h-24 overflow-y-auto">
+                    {selectedComplaint.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Override Form */}
+            <form onSubmit={handleApplyOverride} className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Assign Verified Category
+                  <label htmlFor="new-cat" className="block text-xs font-semibold text-slate-800 mb-1">
+                    Correct Civic Category
                   </label>
                   <select
+                    id="new-cat"
                     value={overrideCat}
                     onChange={(e) => setOverrideCat(e.target.value as CivicCategory)}
-                    className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                   >
                     <option value="pothole">Pothole (Road Authority)</option>
-                    <option value="damaged_road">Damaged Road Surface (Road Authority)</option>
+                    <option value="damaged_road">Damaged Road (Road Authority)</option>
                     <option value="water_leak">Water Leak (Water Department)</option>
                     <option value="streetlight_failure">Streetlight Failure (Infrastructure)</option>
-                    <option value="garbage">Waste & Garbage (Garbage Department)</option>
-                    <option value="other">Other / Manual Evaluation</option>
+                    <option value="garbage">Garbage & Waste (Sanitation)</option>
+                    <option value="other">Other / General Issue</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Assign Department
+                  <label htmlFor="target-dept" className="block text-xs font-semibold text-slate-800 mb-1">
+                    Re-route to Municipal Department
                   </label>
                   <select
+                    id="target-dept"
                     value={overrideDept}
                     onChange={(e) => setOverrideDept(e.target.value)}
-                    required
-                    className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                   >
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name}
+                        {d.name} ({d.code})
                       </option>
                     ))}
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Review Verification Reason (Audited)
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    minLength={5}
-                    placeholder="Document your verification rationale..."
-                    value={overrideReason}
-                    onChange={(e) => setOverrideReason(e.target.value)}
-                    className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label htmlFor="override-reason" className="block text-xs font-semibold text-slate-800 mb-1">
+                  Reason for Override (Recorded in System Audit Log)
+                </label>
+                <textarea
+                  id="override-reason"
+                  rows={3}
+                  required
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="e.g. Model flagged confidence below 80% due to night lighting. Visual inspection confirms streetlight luminaire damage."
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
 
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={overrideLoading}
-                    className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold disabled:opacity-50"
-                  >
-                    {overrideLoading ? "Confirming..." : "Confirm & Route Case"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedComplaint(null)}
-                    className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedComplaint(null)}
+                  className="px-3.5 py-1.5 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={overrideLoading || !overrideReason.trim()}
+                  className="px-4 py-1.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50"
+                >
+                  {overrideLoading ? "Applying Override..." : "Confirm & Apply Override"}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

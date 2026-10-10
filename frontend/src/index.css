@@ -3,9 +3,47 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
   body {
     @apply bg-slate-50 text-slate-900 antialiased font-sans min-h-screen selection:bg-blue-100 selection:text-blue-900;
   }
+
+  /* Form control defaults with accessible high contrast borders */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    @apply border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600;
+  }
+
+  /* Clear focus rings for keyboard navigation */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-blue-700 ring-offset-1;
+  }
+}
+
+/* Accessible skip-to-content link */
+.skip-to-content {
+  @apply sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:font-semibold focus:rounded focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-400;
+}
+
+/* Operational tables styling */
+.gov-table th {
+  @apply text-left text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100/80 px-4 py-3 border-b border-slate-200;
+}
+
+.gov-table td {
+  @apply text-sm text-slate-800 px-4 py-3 border-b border-slate-100;
 }
 
 /* Reduced motion preference respect */

@@ -3,15 +3,17 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
-  Building2,
   Calendar,
   CheckCircle2,
   Cpu,
+  Download,
+  ExternalLink,
   FileText,
   MapPin,
   RotateCcw,
   Shield,
   User,
+  X,
 } from "lucide-react";
 import { api } from "../../api/client";
 import { CategoryBadge } from "../../components/common/CategoryBadge";
@@ -69,10 +71,10 @@ export const ComplaintDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-slate-500">Loading complaint details...</span>
+          <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-slate-500">Loading complaint record...</span>
         </div>
       </div>
     );
@@ -80,17 +82,18 @@ export const ComplaintDetailPage: React.FC = () => {
 
   if (error || !complaint) {
     return (
-      <div className="min-h-screen bg-slate-50 py-12 px-4">
-        <div className="max-w-lg mx-auto bg-white p-6 rounded-2xl border border-slate-200 text-center space-y-4">
-          <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-          <h2 className="text-lg font-bold text-slate-900">Complaint Not Found</h2>
-          <p className="text-xs text-slate-600">{error || "Unable to retrieve complaint."}</p>
-          <Link
-            to="/dashboard"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold"
+      <div id="main-content" className="min-h-screen bg-slate-50 py-12 px-4">
+        <div className="max-w-md mx-auto bg-white p-6 rounded-md border border-slate-200 text-center space-y-4 shadow-panel">
+          <AlertCircle className="w-10 h-10 text-red-600 mx-auto" aria-hidden="true" />
+          <h1 className="text-lg font-bold text-slate-900">Complaint Record Not Found</h1>
+          <p className="text-xs text-slate-600">{error || "Unable to retrieve the requested complaint."}</p>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 bg-gov-navy text-white rounded text-xs font-semibold"
           >
-            Return to Dashboard
-          </Link>
+            Go Back
+          </button>
         </div>
       </div>
     );
@@ -104,287 +107,308 @@ export const ComplaintDetailPage: React.FC = () => {
     (user?.role === "ADMIN" || complaint.user_id === user?.id);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* Navigation Bar */}
+    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
           <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Back to Dashboard</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            {canReopen && (
-              <button
-                onClick={() => setReopenOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Request Reopening</span>
-              </button>
-            )}
-          </div>
+          <span className="text-xs font-mono text-slate-500">
+            Case ID: {complaint.reference_number}
+          </span>
         </div>
 
-        {/* Complaint Header Card */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
-                {complaint.reference_number}
-              </span>
-              <StatusBadge status={complaint.status} />
+        {/* Case Record Header Banner */}
+        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-xs font-bold text-slate-700 uppercase">
+                  {complaint.reference_number}
+                </span>
+                <span>•</span>
+                <span className="text-xs text-slate-500">
+                  Logged {new Date(complaint.created_at).toLocaleString()}
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                {complaint.title}
+              </h1>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <CategoryBadge category={complaint.category} />
-            </div>
-            <div className="text-xs text-slate-400">
-              Reported: {new Date(complaint.created_at).toLocaleString()}
-            </div>
-          </div>
-
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            {complaint.title}
-          </h1>
-          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-            {complaint.description}
-          </p>
-
-          {/* Department and Assignment Chips */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs">
-            <div className="p-3 bg-slate-50 rounded-xl">
-              <span className="text-slate-400 block mb-0.5">Assigned Department</span>
-              <strong className="text-slate-800 text-sm">
-                {complaint.department_name || "Review Queue"}
-              </strong>
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-xl">
-              <span className="text-slate-400 block mb-0.5">Assigned Officer</span>
-              <strong className="text-slate-800 text-sm">
-                {complaint.assigned_officer_name || "Awaiting Crew Assignment"}
-              </strong>
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-xl">
-              <span className="text-slate-400 block mb-0.5">Citizen Identity</span>
-              <span className="text-slate-800 font-medium">
-                {complaint.citizen_name || "Anonymous Citizen"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Media & Location Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Issue Photograph */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-600" />
-              <span>Original Defect Photograph</span>
-            </h2>
-            {primaryAttachment ? (
-              <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center max-h-72">
-                <img
-                  src={primaryAttachment.access_url}
-                  alt="Defect"
-                  className="w-full h-auto max-h-72 object-contain"
-                />
-              </div>
-            ) : (
-              <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
-                No defect photograph on file.
-              </div>
-            )}
-          </div>
-
-          {/* Location & GPS Info */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <span>Location Coordinates</span>
-            </h2>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl space-y-1">
-                <span className="text-slate-400 font-semibold uppercase">Street Address</span>
-                <p className="text-slate-800 font-medium text-sm">
-                  {complaint.address || "Street address not provided"}
-                </p>
-                {complaint.landmark && (
-                  <p className="text-slate-500 text-xs">Landmark: {complaint.landmark}</p>
-                )}
-              </div>
-
-              {complaint.latitude && complaint.longitude && (
-                <div className="p-3 bg-blue-50/60 border border-blue-200/60 rounded-xl space-y-1 text-blue-900">
-                  <span className="font-semibold block uppercase">GPS Geolocation</span>
-                  <div className="font-mono text-xs">
-                    Lat: {complaint.latitude.toFixed(6)}, Lon: {complaint.longitude.toFixed(6)}
-                  </div>
-                  <a
-                    href={`https://maps.google.com/?q=${complaint.latitude},${complaint.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-block mt-1 font-bold text-blue-700 underline text-xs"
-                  >
-                    Open in External Maps ↗
-                  </a>
-                </div>
+              <StatusBadge status={complaint.status} />
+              {canReopen && (
+                <button
+                  type="button"
+                  onClick={() => setReopenOpen(true)}
+                  className="px-3 py-1.5 rounded text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center gap-1.5 transition"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Request Reopening</span>
+                </button>
               )}
             </div>
           </div>
-        </div>
 
-        {/* AI Prediction Breakdown Card */}
-        {complaint.ai_prediction && (
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-base font-bold text-slate-900">
-                  AI Deep Learning Vision Model Inspection
-                </h2>
-              </div>
-              <span className="text-xs font-mono bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">
-                {complaint.ai_prediction.model_name} • {complaint.ai_prediction.model_version}
+          {/* Operational Metadata Ribbon */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div>
+              <span className="text-slate-500 font-medium block">Responsible Department</span>
+              <span className="text-slate-900 font-semibold block mt-0.5">
+                {complaint.department_name || "Assigned to Review Queue"}
               </span>
             </div>
+            <div>
+              <span className="text-slate-500 font-medium block">Assigned Officer</span>
+              <span className="text-slate-900 font-semibold block mt-0.5">
+                {complaint.assigned_officer_name || "Unassigned (Queue Pending)"}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-medium block">Priority Level</span>
+              <span className="text-slate-900 font-semibold uppercase block mt-0.5">
+                {complaint.priority}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-medium block">Reporting Citizen</span>
+              <span className="text-slate-900 font-semibold block mt-0.5">
+                {complaint.citizen_name || "Verified Citizen"}
+              </span>
+            </div>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-              <div>
-                <span className="text-slate-400 block mb-0.5">Predicted Class</span>
-                <strong className="text-slate-900 text-sm capitalize">
-                  {complaint.ai_prediction.predicted_category.replace("_", " ")}
-                </strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block mb-0.5">Model Confidence</span>
-                <strong className="text-indigo-600 text-sm">
-                  {(complaint.ai_prediction.confidence_score * 100).toFixed(1)}%
-                </strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block mb-0.5">Processing Status</span>
-                <span className="font-semibold text-slate-800">
-                  {complaint.ai_prediction.processing_status}
-                </span>
-              </div>
+        {/* 2-Column Operational Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Evidence & Case Details (7 cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Photographic Evidence */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6 space-y-3">
+              <h2 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
+                <span>Citizen Evidence Photograph</span>
+                {primaryAttachment?.access_url && (
+                  <a
+                    href={primaryAttachment.access_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-semibold text-blue-700 hover:underline flex items-center gap-1"
+                  >
+                    <span>Full Resolution</span>
+                    <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                  </a>
+                )}
+              </h2>
+
+              {primaryAttachment?.access_url ? (
+                <div className="overflow-hidden rounded border border-slate-200 bg-slate-900">
+                  <img
+                    src={primaryAttachment.access_url}
+                    alt="Citizen defect evidence"
+                    className="w-full max-h-96 object-contain mx-auto"
+                  />
+                </div>
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
+                  No preview available for this image attachment.
+                </div>
+              )}
             </div>
 
-            {/* Probability Distribution */}
-            {complaint.ai_prediction.all_probabilities && (
-              <div className="space-y-2 pt-2">
-                <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                  Full Neural Softmax Probability Distribution
-                </h3>
-                <div className="space-y-1.5">
-                  {Object.entries(complaint.ai_prediction.all_probabilities).map(([cat, prob]) => (
-                    <div key={cat} className="space-y-0.5">
-                      <div className="flex justify-between text-xs text-slate-600">
-                        <span className="capitalize">{cat.replace("_", " ")}</span>
-                        <span className="font-mono">{((prob as number) * 100).toFixed(1)}%</span>
+            {/* Description & Location */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6 space-y-4">
+              <h2 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
+                Detailed Case Information
+              </h2>
+
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
+                  Description of Issue
+                </span>
+                <p className="text-sm text-slate-800 leading-relaxed bg-slate-50 p-3.5 rounded border border-slate-100 whitespace-pre-wrap">
+                  {complaint.description}
+                </p>
+              </div>
+
+              {(complaint.address || complaint.landmark) && (
+                <div className="space-y-1 pt-2">
+                  <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
+                    Location & Landmark
+                  </span>
+                  <div className="text-xs text-slate-800 bg-slate-50 p-3 rounded border border-slate-100 space-y-1">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-blue-700 shrink-0" aria-hidden="true" />
+                      <span>{complaint.address || "No street address provided"}</span>
+                    </div>
+                    {complaint.landmark && (
+                      <p className="text-slate-500 pl-5">Near landmark: {complaint.landmark}</p>
+                    )}
+                    {complaint.latitude && complaint.longitude && (
+                      <p className="text-slate-400 font-mono text-[11px] pl-5">
+                        GPS: {complaint.latitude.toFixed(5)}, {complaint.longitude.toFixed(5)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Resolution Notice & Evidence (When Resolved) */}
+            {(complaint.resolution_notes || evidenceAttachment) && (
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-md p-6 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-bold text-emerald-900 pb-2 border-b border-emerald-200">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" aria-hidden="true" />
+                  <span>Official Resolution Notice</span>
+                </div>
+
+                {complaint.resolution_notes && (
+                  <div>
+                    <span className="text-xs font-semibold text-emerald-900 block mb-1">
+                      Department Field Notes:
+                    </span>
+                    <p className="text-xs text-emerald-800 leading-relaxed bg-white/80 p-3 rounded border border-emerald-200">
+                      {complaint.resolution_notes}
+                    </p>
+                  </div>
+                )}
+
+                {evidenceAttachment?.access_url && (
+                  <div className="space-y-2 pt-2">
+                    <span className="text-xs font-semibold text-emerald-900 block">
+                      Field Crew Completion Photograph:
+                    </span>
+                    <img
+                      src={evidenceAttachment.access_url}
+                      alt="Resolution evidence"
+                      className="max-h-64 rounded border border-emerald-300 object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Timeline & Notes (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Status Timeline */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6">
+              <h2 className="text-sm font-bold text-slate-900 pb-3 border-b border-slate-100 mb-4">
+                Lifecycle & Progression
+              </h2>
+              <Timeline history={complaint.status_history} />
+            </div>
+
+            {/* Officer Notes (Authorized Access Only) */}
+            {complaint.officer_notes && complaint.officer_notes.length > 0 && (
+              <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6 space-y-3">
+                <h2 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
+                  <span>Investigation Notes</span>
+                  <span className="text-[11px] font-medium text-slate-500">
+                    {complaint.officer_notes.length} recorded
+                  </span>
+                </h2>
+                <div className="space-y-2.5">
+                  {complaint.officer_notes.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`p-3 rounded border text-xs space-y-1 ${
+                        note.is_internal
+                          ? "bg-amber-50/60 border-amber-200 text-amber-900"
+                          : "bg-slate-50 border-slate-200 text-slate-800"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-semibold">
+                        <span>{note.officer_name}</span>
+                        <span className="text-[10px] text-slate-500 font-normal">
+                          {new Date(note.created_at).toLocaleDateString()}
+                        </span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="bg-indigo-600 h-1.5 rounded-full"
-                          style={{ width: `${(prob as number) * 100}%` }}
-                        />
-                      </div>
+                      <p className="leading-relaxed">{note.note_text}</p>
+                      {note.is_internal && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block mt-1">
+                          [Internal Department Record]
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
-            {complaint.ai_prediction.is_overridden && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-0.5">
-                <strong className="font-bold">Human Administrator Override Applied</strong>
-                <p>Reason: {complaint.ai_prediction.override_reason}</p>
-              </div>
-            )}
           </div>
-        )}
-
-        {/* Resolution Evidence Card (if resolved) */}
-        {complaint.status === "RESOLVED" && (
-          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6 sm:p-8 space-y-4">
-            <div className="flex items-center gap-2 text-emerald-800">
-              <CheckCircle2 className="w-6 h-6" />
-              <h2 className="text-lg font-bold">Field Repair Completed & Resolved</h2>
-            </div>
-
-            <div className="text-xs text-emerald-900 space-y-1">
-              <span className="font-semibold block uppercase">Officer Resolution Notes:</span>
-              <p className="bg-white p-3 rounded-xl border border-emerald-200 text-slate-800 leading-relaxed">
-                {complaint.resolution_notes || "Repair completed per municipal specifications."}
-              </p>
-            </div>
-
-            {evidenceAttachment && (
-              <div className="space-y-2 pt-2">
-                <span className="text-xs font-semibold text-emerald-900 block">
-                  Field Resolution Photo Proof:
-                </span>
-                <div className="rounded-xl overflow-hidden border border-emerald-200 max-h-72 bg-white flex items-center justify-center">
-                  <img
-                    src={evidenceAttachment.access_url}
-                    alt="Resolution Evidence"
-                    className="w-full h-auto max-h-72 object-contain"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Progression Timeline */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-900">
-            Lifecycle History & Department Actions
-          </h2>
-          <Timeline history={complaint.status_history} />
         </div>
+      </div>
 
-        {/* Reopen Modal */}
-        {reopenOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 border border-slate-200 shadow-2xl space-y-4">
-              <h3 className="text-lg font-bold text-slate-900">Request Case Reopening</h3>
-              <p className="text-xs text-slate-600">
-                If the defect was not adequately resolved, explain the remaining issue for department re-evaluation:
-              </p>
-              <form onSubmit={handleReopen} className="space-y-4">
+      {/* Reopen Request Modal */}
+      {reopenOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reopen-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 id="reopen-title" className="text-base font-bold text-slate-900">
+                Request Complaint Reopening
+              </h3>
+              <button
+                type="button"
+                onClick={() => setReopenOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleReopen} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="reopen-reason"
+                  className="block text-xs font-semibold text-slate-800 mb-1"
+                >
+                  Reason for Reopening (Required)
+                </label>
                 <textarea
+                  id="reopen-reason"
                   rows={4}
                   required
-                  placeholder="Detail why the issue remains unresolved..."
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}
-                  className="w-full p-3 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  placeholder="Explain why the resolution was incomplete or if the defect has recurred..."
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700"
                 />
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={reopening}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50"
-                  >
-                    {reopening ? "Submitting..." : "Submit Reopening Request"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReopenOpen(false)}
-                    className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setReopenOpen(false)}
+                  className="px-3.5 py-1.5 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reopening || !reopenReason.trim()}
+                  className="px-4 py-1.5 rounded text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
+                >
+                  {reopening ? "Submitting..." : "Confirm Reopening"}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

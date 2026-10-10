@@ -14,51 +14,51 @@ const statusConfig: Record<
   SUBMITTED: {
     label: "Submitted",
     bg: "bg-blue-50",
-    text: "text-blue-700",
+    text: "text-blue-800",
     border: "border-blue-200",
-    dot: "bg-blue-500",
+    dot: "bg-blue-600",
   },
   UNDER_REVIEW: {
     label: "Under Review",
     bg: "bg-amber-50",
-    text: "text-amber-700",
+    text: "text-amber-800",
     border: "border-amber-200",
-    dot: "bg-amber-500",
+    dot: "bg-amber-600",
   },
   ASSIGNED: {
     label: "Assigned",
-    bg: "bg-indigo-50",
-    text: "text-indigo-700",
-    border: "border-indigo-200",
-    dot: "bg-indigo-500",
+    bg: "bg-sky-50",
+    text: "text-sky-800",
+    border: "border-sky-200",
+    dot: "bg-sky-600",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    bg: "bg-cyan-50",
-    text: "text-cyan-700",
-    border: "border-cyan-200",
-    dot: "bg-cyan-500",
+    bg: "bg-indigo-50",
+    text: "text-indigo-800",
+    border: "border-indigo-200",
+    dot: "bg-indigo-600",
   },
   RESOLVED: {
     label: "Resolved",
     bg: "bg-emerald-50",
-    text: "text-emerald-700",
+    text: "text-emerald-800",
     border: "border-emerald-200",
-    dot: "bg-emerald-500",
+    dot: "bg-emerald-600",
   },
   CLOSED: {
     label: "Closed",
     bg: "bg-slate-100",
-    text: "text-slate-600",
-    border: "border-slate-200",
-    dot: "bg-slate-400",
+    text: "text-slate-700",
+    border: "border-slate-300",
+    dot: "bg-slate-500",
   },
   REOPENED: {
     label: "Reopened",
     bg: "bg-rose-50",
-    text: "text-rose-700",
+    text: "text-rose-800",
     border: "border-rose-200",
-    dot: "bg-rose-500",
+    dot: "bg-rose-600",
   },
 };
 
@@ -68,15 +68,15 @@ export const StatusBadge: React.FC<Props> = ({ status, className }) => {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border",
+        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold border tracking-wide",
         config.bg,
         config.text,
         config.border,
         className
       )}
     >
-      <span className={cn("w-1.5 h-1.5 rounded-full", config.dot)} />
-      {config.label}
+      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", config.dot)} aria-hidden="true" />
+      <span>{config.label}</span>
     </span>
   );
 };

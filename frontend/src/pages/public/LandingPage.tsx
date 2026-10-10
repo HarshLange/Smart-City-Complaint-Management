@@ -3,19 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Camera,
-  CheckCircle2,
-  Cpu,
+  CheckCircle,
+  Clock,
   Droplet,
   FileSearch,
   HelpCircle,
   Lightbulb,
   Lock,
-  MapPin,
   Search,
-  Shield,
+  ShieldCheck,
   Trash2,
   Truck,
-  Users,
 } from "lucide-react";
 
 export const LandingPage: React.FC = () => {
@@ -25,170 +23,180 @@ export const LandingPage: React.FC = () => {
 
   const handleQuickTrack = (e: React.FormEvent) => {
     e.preventDefault();
-    if (trackRef.trim()) {
-      navigate(`/track?ref=${encodeURIComponent(trackRef.trim())}&pin=${encodeURIComponent(trackPin.trim())}`);
+    if (trackRef.trim() && trackPin.trim()) {
+      navigate(
+        `/track?ref=${encodeURIComponent(trackRef.trim())}&pin=${encodeURIComponent(
+          trackPin.trim()
+        )}`
+      );
     }
   };
 
   const categories = [
     {
-      title: "Road Potholes & Cracks",
+      title: "Roads & Potholes",
       dept: "Road Authority",
       icon: Truck,
-      color: "text-orange-600 bg-orange-50 border-orange-200",
-      desc: "Surface deterioration, road craters, and driving hazards.",
+      code: "ROAD",
+      desc: "Damaged asphalt, potholes, roadway subsidence, and surface hazards.",
     },
     {
-      title: "Water Pipeline Leaks",
+      title: "Water & Drainage",
       dept: "Water Department",
       icon: Droplet,
-      color: "text-blue-600 bg-blue-50 border-blue-200",
-      desc: "Burst mainlines, valve failures, and potable water leakage.",
+      code: "WATR",
+      desc: "Pipeline bursts, municipal supply leaks, overflowing drains, and valve failures.",
     },
     {
-      title: "Streetlight Failures",
+      title: "Streetlights & Utilities",
       dept: "Infrastructure Department",
       icon: Lightbulb,
-      color: "text-amber-600 bg-amber-50 border-amber-200",
-      desc: "Dark corridors, flickering bulbs, and electrical hazards.",
+      code: "INFR",
+      desc: "Non-functioning streetlights, exposed wiring, and utility pole damage.",
     },
     {
-      title: "Garbage & Waste",
-      dept: "Garbage Department",
+      title: "Sanitation & Waste",
+      dept: "Sanitation Department",
       icon: Trash2,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-200",
-      desc: "Overflowing municipal dumpsters, litter, and hygiene risks.",
+      code: "SANI",
+      desc: "Overflowing public dumpsters, uncollected waste, and roadside litter accumulation.",
     },
   ];
 
   const steps = [
     {
-      num: "01",
-      title: "Capture & Describe",
-      desc: "Take a photograph of the civic defect. Attach GPS coordinates or input your street address.",
-      icon: Camera,
+      step: 1,
+      title: "Submit a photograph and describe the issue",
+      desc: "Provide a clear picture of the civic problem and note the location. GPS coordinates can be attached automatically with your permission or entered manually.",
     },
     {
-      num: "02",
-      title: "Deep Vision AI Classification",
-      desc: "Our EfficientNetV2-S model verifies the image and deterministically maps the ticket to the responsible department.",
-      icon: Cpu,
+      step: 2,
+      title: "Automated classification and department routing",
+      desc: "The system inspects the image using computer vision and assigns the ticket to the responsible department. Low-confidence predictions are flagged for officer review.",
     },
     {
-      num: "03",
-      title: "Municipal Dispatch & Resolution",
-      desc: "Authorized department crews are assigned, complete field repairs, and upload verified photo evidence upon resolution.",
-      icon: CheckCircle2,
+      step: 3,
+      title: "Track progress through field resolution",
+      desc: "Use your private Reference Number and Tracking PIN to check updates as field crews inspect, repair, and upload completion evidence.",
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-white border-b border-slate-200 py-16 sm:py-24">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-slate-50 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Column: Heading & CTAs */}
+    <div id="main-content" className="min-h-screen flex flex-col bg-slate-50">
+      {/* Civic Service Hero */}
+      <section className="bg-white border-b border-slate-200 py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* Left: Purpose & Primary Service Actions */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                Next-Gen Municipal Governance Platform
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
+                <ShieldCheck className="w-4 h-4 text-blue-700" aria-hidden="true" />
+                <span>Municipal Citizen Services Portal</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-                Intelligent Civic Issue Resolution for Responsive Cities
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Report a civic issue. Follow it through resolution.
               </h1>
+
               <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
-                Empowering citizens with AI-assisted defect reporting. Upload an image, get verified classification via deep learning, and track resolution progress with municipal accountability.
+                Submit a report about a damaged road, water leak, broken streetlight, or waste problem. Receive a reference number and check progress as the responsible municipal team responds.
               </p>
 
+              {/* Service Actions */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                 <Link
                   to="/report"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 transition group"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle focus-visible:ring-2 focus-visible:ring-blue-700"
                 >
-                  <Camera className="w-5 h-5" />
-                  <span>Report an Issue Now</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  <Camera className="w-4 h-4" aria-hidden="true" />
+                  <span>Report an Issue</span>
                 </Link>
                 <Link
                   to="/track"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition"
                 >
-                  <FileSearch className="w-5 h-5 text-slate-500" />
-                  <span>Track Complaint</span>
+                  <FileSearch className="w-4 h-4 text-slate-600" aria-hidden="true" />
+                  <span>Track a Complaint</span>
                 </Link>
               </div>
 
-              {/* Trust Badges */}
-              <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center gap-6 text-xs text-slate-500">
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-emerald-600" />
-                  <span>Privacy-Preserving Tracking PIN</span>
+              {/* Operational Assurances */}
+              <div className="pt-6 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600">
+                <div className="flex items-start gap-2">
+                  <Lock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>Personal information protected with tracking PIN</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Cpu className="w-4 h-4 text-blue-600" />
-                  <span>EfficientNetV2-S Neural Engine</span>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>Deterministic department routing & review</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-                  <span>Deterministic Department Routing</span>
+                <div className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>Transparent timeline updates from field crews</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Quick Tracking Card */}
+            {/* Right: Quick Lookup Service Panel */}
             <div className="lg:col-span-5">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
-                    <Search className="w-5 h-5" />
+              <div className="bg-slate-50 border border-slate-300 rounded-lg p-6 sm:p-7 shadow-panel">
+                <div className="flex items-center gap-2.5 pb-4 border-b border-slate-200 mb-5">
+                  <div className="w-8 h-8 rounded bg-blue-700 text-white flex items-center justify-center">
+                    <Search className="w-4 h-4" aria-hidden="true" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-slate-900">Fast Complaint Lookup</h2>
-                    <p className="text-xs text-slate-500">Track progress using your Reference Number and PIN</p>
+                    <h2 className="text-sm font-bold text-slate-900">Track an Existing Complaint</h2>
+                    <p className="text-xs text-slate-500">Check current department handling status</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleQuickTrack} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Reference Number
+                    <label
+                      htmlFor="quick-ref"
+                      className="block text-xs font-semibold text-slate-800 mb-1"
+                    >
+                      Complaint Reference Number
                     </label>
                     <input
+                      id="quick-ref"
                       type="text"
                       placeholder="e.g. REF-20261010-8A4F2C"
                       value={trackRef}
                       onChange={(e) => setTrackRef(e.target.value)}
                       required
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent font-mono uppercase"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Secure Tracking PIN
+                    <label
+                      htmlFor="quick-pin"
+                      className="block text-xs font-semibold text-slate-800 mb-1"
+                    >
+                      6-Character Tracking PIN
                     </label>
                     <input
+                      id="quick-pin"
                       type="text"
                       placeholder="e.g. K8F2X9"
                       value={trackPin}
                       onChange={(e) => setTrackPin(e.target.value)}
                       required
                       maxLength={8}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent font-mono uppercase"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">
-                      High-entropy PIN issued at submission protects your personal data from public enumeration.
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      The tracking PIN was issued upon submission to verify your authorization to view ticket updates.
                     </p>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-lg text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded text-sm font-semibold text-white bg-gov-navy hover:bg-slate-800 transition flex items-center justify-center gap-2"
                   >
-                    <span>Verify & Track Status</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Check Resolution Progress</span>
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </form>
               </div>
@@ -197,37 +205,42 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Civic Categories Showcase */}
-      <section className="py-16 bg-slate-50 border-b border-slate-200">
+      {/* Service Categories Section */}
+      <section className="py-12 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">
-              Automated Routing
+          <div className="max-w-3xl mb-8">
+            <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
+              Supported Civic Issues
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Issues Handled by Municipal Departments
             </h2>
-            <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
-              Civic Issue Categories Handled Automatically
-            </h3>
-            <p className="mt-3 text-sm text-slate-600">
-              Our neural network classifies uploaded defect imagery into authoritative municipal service categories with server-side validation.
+            <p className="mt-2 text-sm text-slate-600">
+              Submitted photographs are analyzed by our computer vision classifier and routed directly to the appropriate authority for field inspection.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((c, i) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {categories.map((c, idx) => {
               const Icon = c.icon;
               return (
                 <div
-                  key={i}
-                  className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition"
+                  key={idx}
+                  className="bg-white p-5 rounded-md border border-slate-200 shadow-subtle flex flex-col justify-between"
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 border ${c.color}`}>
-                    <Icon className="w-6 h-6" />
+                  <div>
+                    <div className="w-10 h-10 rounded bg-slate-100 text-slate-800 flex items-center justify-center mb-3 border border-slate-200">
+                      <Icon className="w-5 h-5 text-blue-700" aria-hidden="true" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">{c.title}</h3>
+                    <p className="text-xs text-blue-700 font-semibold mt-0.5 mb-2">
+                      {c.dept}
+                    </p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{c.desc}</p>
                   </div>
-                  <h4 className="text-base font-bold text-slate-900 mb-1">{c.title}</h4>
-                  <div className="text-xs font-semibold text-blue-600 mb-2">
-                    Routes to: {c.dept}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Department Code: {c.code}</span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">{c.desc}</p>
                 </div>
               );
             })}
@@ -236,54 +249,43 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* How the Process Works */}
-      <section className="py-16 bg-white border-b border-slate-200">
+      <section className="py-12 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">
-              Transparent Lifecycle
+          <div className="max-w-3xl mb-8">
+            <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
+              Public Service Workflow
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              How the Reporting and Resolution Process Works
             </h2>
-            <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
-              From Citizen Report to Field Resolution
-            </h3>
-            <p className="mt-3 text-sm text-slate-600">
-              Every status transition is signed, timestamped, and auditable across our municipal state machine.
+            <p className="mt-2 text-sm text-slate-600">
+              A transparent, audited lifecycle from submission to resolution by municipal crews.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {steps.map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <div key={idx} className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200/80">
-                  <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">
-                    {s.num}
-                  </div>
-                  <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4 shadow-sm shadow-blue-500/20">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900 mb-2">{s.title}</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">{s.desc}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((s) => (
+              <div
+                key={s.step}
+                className="bg-slate-50 p-6 rounded-md border border-slate-200 relative"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
+                    Step {s.step}
+                  </span>
                 </div>
-              );
-            })}
+                <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug">
+                  {s.title}
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
 
-      {/* Security & Privacy Notice */}
-      <section className="py-14 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto bg-slate-800/80 border border-slate-700 rounded-2xl p-8 sm:p-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center shrink-0">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-xl font-bold text-white">
-                Strict Citizen Data Privacy & Object Security
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Public tracking endpoints never expose citizen names, phone numbers, or private internal notes. All uploaded photographs remain stored in isolated private object storage, with access granted only to verified officers and the original reporting citizen.
-              </p>
+          <div className="mt-8 p-4 rounded bg-slate-100 border border-slate-300 text-xs text-slate-700 leading-relaxed flex items-start gap-3">
+            <HelpCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <strong>Service note:</strong> Computer vision provides initial categorization assistance. Municipal officers review tickets before dispatch, ensuring that uncertain or ambiguous reports receive human inspection without delay.
             </div>
           </div>
         </div>

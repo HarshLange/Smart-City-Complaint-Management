@@ -1,94 +1,92 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Building2, Shield, HeartHandshake, PhoneCall } from "lucide-react";
+import { Building2, Shield, Lock, AlertTriangle } from "lucide-react";
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-900 text-slate-400 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-gov-navy text-slate-300 border-t border-slate-700/80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand & mission */}
-          <div className="space-y-4">
+          {/* Identity & Mission */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2.5 text-white">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded bg-blue-700 flex items-center justify-center border border-blue-500/30">
+                <Building2 className="w-4 h-4 text-white" aria-hidden="true" />
               </div>
-              <span className="font-bold text-lg tracking-tight">CivicPulse</span>
+              <span className="font-bold text-base tracking-tight">CivicPulse</span>
             </div>
-            <p className="text-xs leading-relaxed text-slate-400">
-              An automated, transparent civic complaint resolution platform powered by trained deep-learning vision models and deterministic department routing.
+            <p className="text-xs leading-relaxed text-slate-300">
+              A municipal civic issue reporting and complaint management portal. Citizen reports are automatically routed to responsible authorities with transparent status tracking.
             </p>
-            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 rounded-md px-2.5 py-1.5 w-fit">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Municipal Data Privacy Enforced</span>
+            <div className="flex items-center gap-2 text-[11px] text-slate-300 bg-slate-800/80 border border-slate-700 rounded px-2.5 py-1.5 w-fit">
+              <Lock className="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" />
+              <span>Data Protection & Privacy Enforced</span>
             </div>
           </div>
 
-          {/* Quick links */}
+          {/* Citizen Services Navigation */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
               Citizen Services
-            </h4>
+            </h3>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link to="/report" className="hover:text-white transition">
-                  Report Civic Issue
+                  Report a Civic Issue
                 </Link>
               </li>
               <li>
                 <Link to="/track" className="hover:text-white transition">
-                  Track Complaint Progress
+                  Track a Complaint by PIN
                 </Link>
               </li>
               <li>
                 <Link to="/dashboard" className="hover:text-white transition">
-                  Citizen Dashboard
+                  Citizen Account Dashboard
                 </Link>
               </li>
               <li>
                 <Link to="/login" className="hover:text-white transition">
-                  Officer & Admin Portal
+                  Authorized Officer Portal
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Departments */}
+          {/* Municipal Departments */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Departments
-            </h4>
-            <ul className="space-y-2 text-xs">
-              <li>Road Authority (Potholes, Asphalt)</li>
-              <li>Water Department (Pipeline Leaks, Drainage)</li>
-              <li>Infrastructure (Streetlights, Electrical)</li>
-              <li>Garbage & Sanitation (Waste, Litter)</li>
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
+              Municipal Authorities
+            </h3>
+            <ul className="space-y-1.5 text-xs text-slate-300">
+              <li>• Road Authority (Potholes & Pavement)</li>
+              <li>• Water Department (Pipeline Leaks & Drainage)</li>
+              <li>• Infrastructure (Streetlights & Utilities)</li>
+              <li>• Sanitation Department (Waste & Cleanliness)</li>
             </ul>
           </div>
 
-          {/* Emergency & Support */}
+          {/* Urgent Assistance Guidance */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Emergency Services
-            </h4>
-            <p className="text-xs leading-relaxed text-slate-400 mb-3">
-              For immediate life safety, fire, or gas line hazards, do not use this portal. Contact municipal emergency dispatch immediately:
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+              <span>Urgent Civic Hazards</span>
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-300">
+              For immediate life safety, severe gas leaks, downed high-voltage wires, or flash flooding hazards, please do not use this online ticket system. Contact your local emergency dispatch or municipal emergency line directly.
             </p>
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-sm bg-rose-950/40 border border-rose-900/60 rounded-md px-3 py-2 w-fit">
-              <PhoneCall className="w-4 h-4" />
-              <span>Emergency Dispatch: 911 / 112</span>
-            </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} CivicPulse Smart City Management System. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <span className="hover:text-slate-400">Security & Encryption</span>
+        {/* Bottom Metadata & Legal */}
+        <div className="mt-8 pt-6 border-t border-slate-700 text-[11px] text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p>© {new Date().getFullYear()} CivicPulse — Smart City Complaint Management System.</p>
+          <div className="flex items-center gap-3">
+            <span>Server-side Encryption</span>
             <span>•</span>
-            <span className="hover:text-slate-400">Privacy Policy</span>
+            <span>Privacy Preserved Tracking</span>
             <span>•</span>
-            <span className="hover:text-slate-400">WCAG 2.1 AA Compliant</span>
+            <span>Accessibility Standards Target: WCAG 2.2 AA</span>
           </div>
         </div>
       </div>
