@@ -18,10 +18,40 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 import { CategoryBadge } from "../../components/common/CategoryBadge";
+import { SecureEvidenceImage } from "../../components/common/SecureEvidenceImage";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { Timeline } from "../../components/common/Timeline";
 import { useAuthStore } from "../../store/authStore";
 import { Complaint, ComplaintStatus } from "../../types";
+
+const VALID_NEXT_STATUSES: Record<ComplaintStatus, { status: ComplaintStatus; label: string }[]> = {
+  SUBMITTED: [
+    { status: "UNDER_REVIEW", label: "UNDER_REVIEW (Begin Municipal Review)" },
+    { status: "ASSIGNED", label: "ASSIGNED (Dispatch Field Crew)" },
+  ],
+  UNDER_REVIEW: [
+    { status: "ASSIGNED", label: "ASSIGNED (Dispatch Field Crew)" },
+    { status: "CLOSED", label: "CLOSED (Administrative Close / Invalid)" },
+  ],
+  ASSIGNED: [
+    { status: "IN_PROGRESS", label: "IN_PROGRESS (Under Active Repair)" },
+    { status: "UNDER_REVIEW", label: "UNDER_REVIEW (Return to Review Queue)" },
+  ],
+  IN_PROGRESS: [
+    { status: "RESOLVED", label: "RESOLVED (Repairs Completed & Verified)" },
+    { status: "UNDER_REVIEW", label: "UNDER_REVIEW (Return to Review Queue)" },
+  ],
+  RESOLVED: [
+    { status: "CLOSED", label: "CLOSED (Final Verification & Sign-off)" },
+  ],
+  CLOSED: [
+    { status: "REOPENED", label: "REOPENED (Reopen for Inspection)" },
+  ],
+  REOPENED: [
+    { status: "ASSIGNED", label: "ASSIGNED (Re-dispatch Field Crew)" },
+    { status: "IN_PROGRESS", label: "IN_PROGRESS (Resume Field Work)" },
+  ],
+};
 
 export const DepartmentWorkspace: React.FC = () => {
   const { user } = useAuthStore();
@@ -38,7 +68,7 @@ export const DepartmentWorkspace: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Status Update Form State
-  const [newStatus, setNewStatus] = useState<ComplaintStatus>("IN_PROGRESS");
+  const [newStatus, setNewStatus] = useState<ComplaintStatus | "">("");
   const [statusNotes, setStatusNotes] = useState("");
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
 
@@ -78,6 +108,10 @@ export const DepartmentWorkspace: React.FC = () => {
   const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedComplaint) return;
+    if (!newStatus || newStatus === selectedComplaint.status) {
+      alert("Please select an authorized target status different from the current status.");
+      return;
+    }
     setActionLoading(true);
     try {
       if (evidenceFile) {
@@ -85,10 +119,12 @@ export const DepartmentWorkspace: React.FC = () => {
       }
       const updated = await api.updateComplaintStatus(
         selectedComplaint.id,
-        newStatus,
+        newStatus as ComplaintStatus,
         statusNotes
       );
       setSelectedComplaint(updated);
+      const nextAllowed = VALID_NEXT_STATUSES[updated.status] || [];
+      setNewStatus(nextAllowed[0]?.status || "");
       setStatusNotes("");
       setEvidenceFile(null);
       await loadData();
@@ -299,7 +335,8 @@ export const DepartmentWorkspace: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setSelectedComplaint(c);
-                            setNewStatus(c.status);
+                            const allowed = VALID_NEXT_STATUSES[c.status] || [];
+                            setNewStatus(allowed[0]?.status || "");
                           }}
                           className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
                         >
@@ -369,19 +406,27 @@ export const DepartmentWorkspace: React.FC = () => {
 
               <div>
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
-                  Citizen Uploaded Image
+                  Citizen Uploaded Defect Photograph
                 </span>
-                {selectedComplaint.attachments?.find((a) => !a.is_resolution_evidence)?.access_url ? (
-                  <img
-                    src={selectedComplaint.attachments.find((a) => !a.is_resolution_evidence)!.access_url}
-                    alt="Citizen defect submission"
-                    className="w-full max-h-56 object-contain rounded border border-slate-300 bg-slate-900"
-                  />
-                ) : (
-                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
-                    No image available
-                  </div>
-                )}
+                {(() => {
+                  const att = selectedComplaint.attachments?.find((a) => !a.is_resolution_evidence);
+                  if (att?.storage_path) {
+                    return (
+                      <SecureEvidenceImage
+                        storagePath={att.storage_path}
+                        filename={att.filename}
+                        accessUrl={att.access_url}
+                        alt={`Citizen defect submission ${selectedComplaint.reference_number}`}
+                        className="w-full max-h-56 object-contain rounded border border-slate-300 bg-slate-900"
+                      />
+                    );
+                  }
+                  return (
+                    <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
+                      No photographic evidence attached to this ticket.
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -397,17 +442,31 @@ export const DepartmentWorkspace: React.FC = () => {
                     <label htmlFor="update-status" className="block text-xs font-semibold text-slate-800 mb-1">
                       New Operational Status
                     </label>
-                    <select
-                      id="update-status"
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
-                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs font-medium bg-white focus:ring-2 focus:ring-blue-700"
-                    >
-                      <option value="ASSIGNED">ASSIGNED (Dispatch Field Crew)</option>
-                      <option value="IN_PROGRESS">IN_PROGRESS (Under Active Repair)</option>
-                      <option value="RESOLVED">RESOLVED (Repairs Completed)</option>
-                      <option value="CLOSED">CLOSED (Final Administrative Sign-off)</option>
-                    </select>
+                    {(() => {
+                      const options = VALID_NEXT_STATUSES[selectedComplaint.status] || [];
+                      if (options.length === 0) {
+                        return (
+                          <div className="p-2.5 bg-slate-100 border border-slate-200 rounded text-xs text-slate-600 italic">
+                            No further operational transitions available from current status ({selectedComplaint.status}).
+                          </div>
+                        );
+                      }
+                      return (
+                        <select
+                          id="update-status"
+                          value={newStatus}
+                          onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
+                          className="w-full px-3 py-2 rounded border border-slate-300 text-xs font-medium bg-white focus:ring-2 focus:ring-blue-700"
+                        >
+                          <option value="" disabled>-- Select Authorized Next Status --</option>
+                          {options.map((opt) => (
+                            <option key={opt.status} value={opt.status}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </div>
 
                   <div>
@@ -441,8 +500,8 @@ export const DepartmentWorkspace: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={actionLoading}
-                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold disabled:opacity-50"
+                    disabled={actionLoading || !newStatus || newStatus === selectedComplaint.status}
+                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold disabled:opacity-50 transition shadow-subtle"
                   >
                     {actionLoading ? "Saving Status..." : "Apply Status Update"}
                   </button>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 import { CategoryBadge } from "../../components/common/CategoryBadge";
+import { SecureEvidenceImage } from "../../components/common/SecureEvidenceImage";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { Timeline } from "../../components/common/Timeline";
 import { useAuthStore } from "../../store/authStore";
@@ -196,30 +197,23 @@ export const ComplaintDetailPage: React.FC = () => {
             <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6 space-y-3">
               <h2 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
                 <span>Citizen Evidence Photograph</span>
-                {primaryAttachment?.access_url && (
-                  <a
-                    href={primaryAttachment.access_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-semibold text-blue-700 hover:underline flex items-center gap-1"
-                  >
-                    <span>Full Resolution</span>
-                    <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                  </a>
+                {primaryAttachment && (
+                  <span className="text-xs text-slate-500 font-mono">
+                    {primaryAttachment.filename} ({(primaryAttachment.file_size_bytes / 1024).toFixed(0)} KB)
+                  </span>
                 )}
               </h2>
 
-              {primaryAttachment?.access_url ? (
-                <div className="overflow-hidden rounded border border-slate-200 bg-slate-900">
-                  <img
-                    src={primaryAttachment.access_url}
-                    alt="Citizen defect evidence"
-                    className="w-full max-h-96 object-contain mx-auto"
-                  />
-                </div>
+              {primaryAttachment?.storage_path ? (
+                <SecureEvidenceImage
+                  storagePath={primaryAttachment.storage_path}
+                  filename={primaryAttachment.filename}
+                  accessUrl={primaryAttachment.access_url}
+                  alt={`Citizen evidence for case ${complaint.reference_number}`}
+                />
               ) : (
                 <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded border border-slate-200">
-                  No preview available for this image attachment.
+                  No photographic attachment registered for this complaint.
                 </div>
               )}
             </div>
@@ -281,15 +275,18 @@ export const ComplaintDetailPage: React.FC = () => {
                   </div>
                 )}
 
-                {evidenceAttachment?.access_url && (
+                {evidenceAttachment?.storage_path && (
                   <div className="space-y-2 pt-2">
                     <span className="text-xs font-semibold text-emerald-900 block">
                       Field Crew Completion Photograph:
                     </span>
-                    <img
-                      src={evidenceAttachment.access_url}
-                      alt="Resolution evidence"
-                      className="max-h-64 rounded border border-emerald-300 object-cover"
+                    <SecureEvidenceImage
+                      storagePath={evidenceAttachment.storage_path}
+                      filename={evidenceAttachment.filename}
+                      accessUrl={evidenceAttachment.access_url}
+                      isResolutionEvidence={true}
+                      alt={`Resolution evidence for case ${complaint.reference_number}`}
+                      className="max-h-72 object-contain mx-auto"
                     />
                   </div>
                 )}

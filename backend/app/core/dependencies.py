@@ -33,6 +33,33 @@ async def get_current_user(
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
+    # If user not found by ID, attempt lookup by email (e.g. pre-existing email account)
+    if not user and "email" in payload:
+        email = payload["email"].lower()
+        res_email = await db.execute(select(User).where(User.email == email))
+        user = res_email.scalar_one_or_none()
+
+    # If user is authenticated via Supabase but profile row doesn't exist, auto-provision Citizen profile
+    if not user and payload.get("aud") == "authenticated" and "email" in payload:
+        user_metadata = payload.get("user_metadata", {})
+        full_name = (
+            user_metadata.get("full_name")
+            or user_metadata.get("name")
+            or payload["email"].split("@")[0]
+        )
+        user = User(
+            id=user_id,
+            email=payload["email"].lower(),
+            hashed_password="[SUPABASE_MANAGED_AUTH]",
+            full_name=full_name,
+            role=UserRole.CITIZEN,  # Invariant: external OAuth sign-in is strictly CITIZEN
+            department_id=None,
+            is_active=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
     if not user:
         raise UnauthorizedException("User account does not exist")
     if not user.is_active:
@@ -62,6 +89,9 @@ async def get_optional_user(
 
     result = await db.execute(select(User).where(User.id == payload["sub"]))
     user = result.scalar_one_or_none()
+    if not user and "email" in payload:
+        res_email = await db.execute(select(User).where(User.email == payload["email"].lower()))
+        user = res_email.scalar_one_or_none()
     return user if user and user.is_active else None
 
 

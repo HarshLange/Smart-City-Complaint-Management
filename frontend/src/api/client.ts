@@ -12,10 +12,13 @@ import {
   UserRole,
 } from "../types";
 
-const API_BASE = "/api/v1";
+// Dynamic API base URL: Reads VITE_API_BASE_URL for deployed environments (e.g. Cloud Run),
+// with fallback to '/api/v1' for local Vite dev proxy and single-origin deployments.
+const rawApiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+const API_BASE = rawApiBase ? rawApiBase.replace(/\/+$/, "") : "/api/v1";
 
 class ApiClient {
-  private getToken(): string | null {
+  public getToken(): string | null {
     return localStorage.getItem("smart_city_auth_token");
   }
 
@@ -28,7 +31,8 @@ class ApiClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE}${endpoint}`;
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE}${cleanEndpoint}`;
     const token = this.getToken();
 
     const headers: Record<string, string> = {
@@ -241,6 +245,65 @@ class ApiClient {
 
   async getAuditLogs(limit: number = 50): Promise<any[]> {
     return this.request<any[]>(`/admin/audit-logs?limit=${limit}`);
+  }
+
+  async adminGetDepartments(): Promise<Department[]> {
+    return this.request<Department[]>("/admin/departments");
+  }
+
+  async adminCreateDepartment(data: {
+    code: string;
+    name: string;
+    description: string;
+    contact_email: string;
+  }): Promise<Department> {
+    return this.request<Department>("/admin/departments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateDepartment(
+    departmentId: string,
+    data: { name?: string; description?: string; contact_email?: string; is_active?: boolean }
+  ): Promise<Department> {
+    return this.request<Department>(`/admin/departments/${departmentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateUser(
+    userId: string,
+    data: { full_name?: string; role?: UserRole; department_id?: string; is_active?: boolean }
+  ): Promise<User> {
+    return this.request<User>(`/admin/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Secure File Storage Endpoints
+  async getSignedUrl(path: string, expiresIn: number = 3600): Promise<{ signed_url: string }> {
+    return this.request<{ signed_url: string; storage_path: string; expires_in: number }>(
+      `/files/signed-url?path=${encodeURIComponent(path)}&expires_in=${expiresIn}`
+    );
+  }
+
+  async getFileBlobUrl(path: string): Promise<string> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE}/files/download?path=${encodeURIComponent(path)}`, {
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to download file: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
   }
 
   // Notifications

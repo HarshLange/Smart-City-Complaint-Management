@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -38,6 +38,40 @@ export const NewComplaintPage: React.FC = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Restore draft on initial load
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("civicpulse_complaint_draft");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.description) setDescription(parsed.description);
+        if (parsed.address) setAddress(parsed.address);
+        if (parsed.landmark) setLandmark(parsed.landmark);
+        if (parsed.title || parsed.description) {
+          setDraftRestored(true);
+        }
+      }
+    } catch {
+      // Storage restriction fallback
+    }
+  }, []);
+
+  // Auto-save draft as citizen types
+  useEffect(() => {
+    if (title || description || address || landmark) {
+      try {
+        localStorage.setItem(
+          "civicpulse_complaint_draft",
+          JSON.stringify({ title, description, address, landmark })
+        );
+      } catch {
+        // Storage quota fallback
+      }
+    }
+  }, [title, description, address, landmark]);
 
   // Success Confirmation State
   const [successData, setSuccessData] = useState<{
@@ -133,6 +167,11 @@ export const NewComplaintPage: React.FC = () => {
         department_name: res.department_name || "Review Queue",
         confidence_score: res.confidence_score,
       });
+
+      // Clear draft on successful submission
+      try {
+        localStorage.removeItem("civicpulse_complaint_draft");
+      } catch {}
     } catch (err: any) {
       setSubmitError(
         err.message || "Failed to submit complaint. Please check your network and try again."
@@ -298,6 +337,28 @@ export const NewComplaintPage: React.FC = () => {
         ) : (
           /* Structured 4-Section Form */
           <form onSubmit={handleSubmit} className="space-y-6">
+            {draftRestored && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800 flex items-center justify-between">
+                <span>Draft restored from your recent session.</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem("civicpulse_complaint_draft");
+                    } catch {}
+                    setTitle("");
+                    setDescription("");
+                    setAddress("");
+                    setLandmark("");
+                    setDraftRestored(false);
+                  }}
+                  className="text-blue-700 underline font-semibold hover:text-blue-900"
+                >
+                  Clear Draft
+                </button>
+              </div>
+            )}
+
             {submitError && (
               <div
                 role="alert"

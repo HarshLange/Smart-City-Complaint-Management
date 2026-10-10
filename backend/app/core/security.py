@@ -51,8 +51,48 @@ def create_access_token(
     return encoded_jwt
 
 
+_jwks_client: Optional[jwt.PyJWKClient] = None
+
+
+def get_jwks_client() -> Optional[jwt.PyJWKClient]:
+    """Lazy initialize PyJWKClient for Supabase JWKS key resolution with caching."""
+    global _jwks_client
+    if _jwks_client is None and settings.SUPABASE_URL:
+        jwks_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        _jwks_client = jwt.PyJWKClient(jwks_url, cache_keys=True, max_cached_keys=16)
+    return _jwks_client
+
+
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
-    """Decode and validate signed JWT access token."""
+    """Decode and validate signed JWT access token.
+    
+    Supports:
+    1. Supabase-issued asymmetric JWTs (ES256, RS256) verified via live JWKS.
+    2. Locally-issued symmetric JWTs (HS256) verified via settings.SECRET_KEY.
+    """
+    # 1. Check if token was issued by Supabase (ES256 / RS256 / kid header present)
+    if settings.SUPABASE_URL:
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+            alg = unverified_header.get("alg", "")
+            kid = unverified_header.get("kid")
+            if kid or alg in ("ES256", "RS256"):
+                client = get_jwks_client()
+                if client:
+                    signing_key = client.get_signing_key_from_jwt(token)
+                    payload = jwt.decode(
+                        token,
+                        signing_key.key,
+                        algorithms=["ES256", "RS256"],
+                        audience="authenticated",
+                        issuer=f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1",
+                    )
+                    return payload
+        except (jwt.PyJWTError, Exception):
+            # Continue to local verification fallback or reject
+            pass
+
+    # 2. Locally signed HS256 token verification
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         return payload

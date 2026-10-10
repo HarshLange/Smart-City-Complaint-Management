@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
@@ -11,20 +11,45 @@ import {
   MapPin,
   Search,
   ShieldCheck,
+  User,
 } from "lucide-react";
 import { api } from "../../api/client";
 import { CategoryBadge } from "../../components/common/CategoryBadge";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { Timeline } from "../../components/common/Timeline";
-import { ComplaintPublicTracking } from "../../types";
+import { useAuthStore } from "../../store/authStore";
+import { Complaint, ComplaintPublicTracking } from "../../types";
 
 export const TrackComplaintPage: React.FC = () => {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [refNum, setRefNum] = useState(searchParams.get("ref") || "");
   const [pin, setPin] = useState(searchParams.get("pin") || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [complaint, setComplaint] = useState<ComplaintPublicTracking | null>(null);
+  const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
+
+  // Enforce authenticated-only tracking
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      const returnPath = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?redirect=${returnPath}`, { replace: true });
+    }
+  }, [authLoading, isAuthenticated, location, navigate]);
+
+  // Load user's complaints for convenient reference selection
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "CITIZEN") {
+      api
+        .getMyComplaints()
+        .then(setUserComplaints)
+        .catch(() => {});
+    }
+  }, [isAuthenticated, user]);
 
   const fetchTracking = async (r: string, p: string) => {
     if (!r.trim() || !p.trim()) return;
@@ -86,6 +111,42 @@ export const TrackComplaintPage: React.FC = () => {
             Enter the 16-character Reference Number and 6-character Tracking PIN received when your complaint was registered.
           </p>
         </div>
+
+        {/* Authenticated Identity & Recent Submissions Helper */}
+        {isAuthenticated && user && (
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-md p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-slate-800">
+              <User className="w-4 h-4 text-blue-700 shrink-0" aria-hidden="true" />
+              <span>
+                Authenticated as <strong>{user.full_name}</strong> ({user.email})
+              </span>
+            </div>
+
+            {userComplaints.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="quick-ref-select" className="text-slate-600 font-medium shrink-0">
+                  Select your case:
+                </label>
+                <select
+                  id="quick-ref-select"
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setRefNum(e.target.value);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded border border-blue-300 text-xs font-mono bg-white text-slate-800 focus:ring-2 focus:ring-blue-700"
+                >
+                  <option value="">-- Choose from your {userComplaints.length} tickets --</option>
+                  {userComplaints.map((uc) => (
+                    <option key={uc.id} value={uc.reference_number}>
+                      {uc.reference_number} — {uc.title.substring(0, 30)}...
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Verification Form Card */}
         <div className="bg-white rounded-md p-6 sm:p-7 border border-slate-200 shadow-panel">

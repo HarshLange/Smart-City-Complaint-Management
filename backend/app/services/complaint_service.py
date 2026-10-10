@@ -68,6 +68,12 @@ class ComplaintService:
         is_owner: bool = False,
     ) -> None:
         """Enforce state transition invariants and actor permissions."""
+        if current == target:
+            raise BadRequestException(
+                f"Complaint is already in status '{current.value}'. Please select a different valid next status.",
+                error_code="IDENTICAL_STATUS_TRANSITION",
+            )
+
         allowed_targets = ALLOWED_TRANSITIONS.get(current, [])
         if target not in allowed_targets:
             raise InvalidTransitionException(current.value, target.value)
@@ -105,126 +111,144 @@ class ComplaintService:
             file_bytes=image_bytes, prefix="complaints", extension=extension
         )
 
-        # 3. Generate high-entropy reference and tracking PIN
-        reference_num = generate_complaint_reference()
-        plain_pin = generate_tracking_pin()
-        hashed_pin = hash_tracking_pin(plain_pin)
-
-        # 4. Execute AI Model Inference
-        ai_result = await run_inference_async(image_bytes)
-        predicted_cat_str = ai_result.get("predicted_category", "other")
-        needs_review = ai_result.get("needs_review", True)
-        suggested_dept_code = ai_result.get("suggested_department_code")
-
-        # Map predicted string to enum safely
-        category_enum = CivicCategory.OTHER
         try:
-            category_enum = CivicCategory(predicted_cat_str)
-        except ValueError:
+            # 3. Generate high-entropy reference and tracking PIN
+            reference_num = generate_complaint_reference()
+            plain_pin = generate_tracking_pin()
+            hashed_pin = hash_tracking_pin(plain_pin)
+
+            # 4. Execute AI Model Inference
+            ai_result = await run_inference_async(image_bytes)
+            predicted_cat_str = ai_result.get("predicted_category", "other")
+            needs_review = ai_result.get("needs_review", True)
+            suggested_dept_code = ai_result.get("suggested_department_code")
+
+            # Map predicted string to enum safely
             category_enum = CivicCategory.OTHER
+            try:
+                category_enum = CivicCategory(predicted_cat_str)
+            except ValueError:
+                category_enum = CivicCategory.OTHER
 
-        # Resolve department from suggested department code
-        department_id: Optional[str] = None
-        if suggested_dept_code:
-            dept_res = await db.execute(
-                select(Department).where(Department.code == suggested_dept_code)
-            )
-            dept = dept_res.scalar_one_or_none()
-            if dept:
-                department_id = dept.id
+            # Resolve department from suggested department code
+            department_id: Optional[str] = None
+            if suggested_dept_code:
+                dept_res = await db.execute(
+                    select(Department).where(Department.code == suggested_dept_code)
+                )
+                dept = dept_res.scalar_one_or_none()
+                if dept:
+                    department_id = dept.id
 
-        # Determine initial complaint status: if low confidence or failed -> UNDER_REVIEW
-        initial_status = ComplaintStatus.SUBMITTED
-        if needs_review or not department_id:
-            initial_status = ComplaintStatus.UNDER_REVIEW
-        else:
-            initial_status = ComplaintStatus.ASSIGNED
+            # Determine initial complaint status: if low confidence or failed -> UNDER_REVIEW
+            initial_status = ComplaintStatus.SUBMITTED
+            if needs_review or not department_id:
+                initial_status = ComplaintStatus.UNDER_REVIEW
+            else:
+                initial_status = ComplaintStatus.ASSIGNED
 
-        # 5. Persist Complaint
-        complaint = Complaint(
-            reference_number=reference_num,
-            tracking_pin_hash=hashed_pin,
-            user_id=user_id,
-            title=title,
-            description=description,
-            status=initial_status,
-            category=category_enum,
-            department_id=department_id,
-            latitude=latitude,
-            longitude=longitude,
-            address=address,
-            landmark=landmark,
-        )
-        db.add(complaint)
-        await db.flush()
-
-        # 6. Persist Attachment
-        attachment = ComplaintAttachment(
-            complaint_id=complaint.id,
-            storage_path=storage_path,
-            filename=filename,
-            content_type=content_type,
-            file_size_bytes=len(image_bytes),
-            is_resolution_evidence=False,
-            uploaded_by_id=user_id,
-        )
-        db.add(attachment)
-
-        # 7. Persist AI Prediction
-        prediction = AIPrediction(
-            complaint_id=complaint.id,
-            model_name=ai_result.get("model_name", "EfficientNetV2-S"),
-            model_version=ai_result.get("model_version", "TP100-epoch16"),
-            predicted_category=predicted_cat_str,
-            confidence_score=ai_result.get("confidence_score", 0.0),
-            all_probabilities=ai_result.get("all_probabilities", {}),
-            suggested_department_code=suggested_dept_code or "",
-            processing_status=ai_result.get("processing_status", "FAILED"),
-            error_message=ai_result.get("error_message"),
-        )
-        db.add(prediction)
-
-        # 8. Record Initial Status History
-        history = StatusHistory(
-            complaint_id=complaint.id,
-            previous_status=ComplaintStatus.SUBMITTED,
-            new_status=initial_status,
-            actor_id=user_id,
-            actor_name="Citizen Submission System",
-            actor_role="CITIZEN",
-            notes="Initial submission registered and processed by AI classification engine.",
-        )
-        db.add(history)
-
-        # 9. Record Audit Event
-        audit = AuditEvent(
-            entity_type="COMPLAINT",
-            entity_id=complaint.id,
-            action_type=AuditActionType.COMPLAINT_CREATED,
-            actor_id=user_id,
-            details={
-                "reference_number": reference_num,
-                "ai_predicted_category": predicted_cat_str,
-                "ai_confidence": ai_result.get("confidence_score"),
-                "status": initial_status.value,
-                "needs_review": needs_review,
-            },
-            ip_address=client_ip,
-        )
-        db.add(audit)
-
-        # 10. In-App Notification for Citizen (if registered)
-        if user_id:
-            notif = Notification(
+            # 5. Persist Complaint
+            complaint = Complaint(
+                reference_number=reference_num,
+                tracking_pin_hash=hashed_pin,
                 user_id=user_id,
-                complaint_id=complaint.id,
-                title="Complaint Successfully Submitted",
-                message=f"Complaint {reference_num} has been registered and routed to municipal services.",
-                notification_type="STATUS_UPDATE",
+                title=title,
+                description=description,
+                status=initial_status,
+                category=category_enum,
+                department_id=department_id,
+                latitude=latitude,
+                longitude=longitude,
+                address=address,
+                landmark=landmark,
             )
-            db.add(notif)
+            db.add(complaint)
+            await db.flush()
 
-        await db.commit()
+            # 6. Persist Attachment
+            attachment = ComplaintAttachment(
+                complaint_id=complaint.id,
+                storage_path=storage_path,
+                filename=filename,
+                content_type=content_type,
+                file_size_bytes=len(image_bytes),
+                is_resolution_evidence=False,
+                uploaded_by_id=user_id,
+            )
+            db.add(attachment)
+
+            # 7. Persist AI Prediction
+            prediction = AIPrediction(
+                complaint_id=complaint.id,
+                model_name=ai_result.get("model_name", "EfficientNetV2-S"),
+                model_version=ai_result.get("model_version", "TP100-epoch16"),
+                predicted_category=predicted_cat_str,
+                confidence_score=ai_result.get("confidence_score", 0.0),
+                all_probabilities=ai_result.get("all_probabilities", {}),
+                suggested_department_code=suggested_dept_code or "",
+                processing_status=ai_result.get("processing_status", "FAILED"),
+                error_message=ai_result.get("error_message"),
+            )
+            db.add(prediction)
+
+            # 8. Record Initial Status History
+            history = StatusHistory(
+                complaint_id=complaint.id,
+                previous_status=ComplaintStatus.SUBMITTED,
+                new_status=initial_status,
+                actor_id=user_id,
+                actor_name="Citizen Submission System",
+                actor_role="CITIZEN",
+                notes="Initial submission registered and processed by AI classification engine.",
+            )
+            db.add(history)
+
+            # 9. Record Audit Event
+            audit = AuditEvent(
+                entity_type="COMPLAINT",
+                entity_id=complaint.id,
+                action_type=AuditActionType.COMPLAINT_CREATED,
+                actor_id=user_id,
+                details={
+                    "reference_number": reference_num,
+                    "ai_predicted_category": predicted_cat_str,
+                    "ai_confidence": ai_result.get("confidence_score"),
+                    "status": initial_status.value,
+                    "needs_review": needs_review,
+                },
+                ip_address=client_ip,
+            )
+            db.add(audit)
+
+            # 10. In-App Notification for Citizen (if registered)
+            if user_id:
+                notif = Notification(
+                    user_id=user_id,
+                    complaint_id=complaint.id,
+                    title="Complaint Successfully Submitted",
+                    message=f"Complaint {reference_num} has been registered and routed to municipal services.",
+                    notification_type="STATUS_UPDATE",
+                )
+                db.add(notif)
+
+            await db.commit()
+        except Exception as exc:
+            await db.rollback()
+            logger.error(
+                "Database transaction failed after image upload. Executing compensating storage cleanup for: %s",
+                storage_path,
+            )
+            try:
+                await storage_service.delete_file(storage_path)
+                logger.info("Compensating cleanup successfully deleted orphaned object: %s", storage_path)
+            except Exception as cleanup_err:
+                logger.error(
+                    "Compensating storage cleanup failed for %s: %s",
+                    storage_path,
+                    type(cleanup_err).__name__,
+                )
+            raise exc
+
         full_complaint = await self.get_complaint_by_id(db, complaint.id)
         return full_complaint, plain_pin
 
@@ -423,19 +447,36 @@ class ComplaintService:
             file_bytes=file_bytes, prefix="evidence", extension=extension
         )
 
-        attachment = ComplaintAttachment(
-            complaint_id=complaint.id,
-            storage_path=storage_path,
-            filename=filename,
-            content_type=content_type,
-            file_size_bytes=len(file_bytes),
-            is_resolution_evidence=True,
-            uploaded_by_id=officer.id,
-        )
-        db.add(attachment)
-        await db.commit()
-        await db.refresh(attachment)
-        return attachment
+        try:
+            attachment = ComplaintAttachment(
+                complaint_id=complaint.id,
+                storage_path=storage_path,
+                filename=filename,
+                content_type=content_type,
+                file_size_bytes=len(file_bytes),
+                is_resolution_evidence=True,
+                uploaded_by_id=officer.id,
+            )
+            db.add(attachment)
+            await db.commit()
+            await db.refresh(attachment)
+            return attachment
+        except Exception as exc:
+            await db.rollback()
+            logger.error(
+                "Database transaction failed after resolution evidence upload. Executing compensating cleanup for: %s",
+                storage_path,
+            )
+            try:
+                await storage_service.delete_file(storage_path)
+                logger.info("Compensating cleanup successfully deleted orphaned evidence object: %s", storage_path)
+            except Exception as cleanup_err:
+                logger.error(
+                    "Compensating storage cleanup failed for %s: %s",
+                    storage_path,
+                    type(cleanup_err).__name__,
+                )
+            raise exc
 
     async def get_complaint_by_id(
         self, db: AsyncSession, complaint_id: str

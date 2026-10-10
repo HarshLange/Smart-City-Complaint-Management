@@ -37,6 +37,7 @@ export interface Department {
   contact_email: string;
   is_active: boolean;
   officer_count?: number;
+  active_complaints_count?: number;
   created_at: string;
 }
 

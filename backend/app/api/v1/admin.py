@@ -24,6 +24,11 @@ from app.schemas.admin import (
 )
 from app.schemas.auth import UserResponse
 from app.schemas.complaint import ComplaintDetailResponse, ComplaintOverrideRequest
+from app.schemas.department import (
+    DepartmentCreateRequest,
+    DepartmentResponse,
+    DepartmentUpdateRequest,
+)
 from app.services.complaint_service import complaint_service
 
 router = APIRouter(prefix="/admin", tags=["Administrator Console"])
@@ -334,3 +339,122 @@ async def get_audit_logs(
         }
         for l in logs
     ]
+
+
+@router.get("/departments", response_model=List[DepartmentResponse])
+async def list_admin_departments(
+    current_admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all departments (active and inactive) with live officer and complaint counts."""
+    depts = (await db.execute(select(Department).order_by(Department.name))).scalars().all()
+    results = []
+    for d in depts:
+        off_count = (await db.execute(
+            select(func.count(User.id)).where(User.department_id == d.id, User.role == UserRole.OFFICER)
+        )).scalar() or 0
+
+        comp_count = (await db.execute(
+            select(func.count(Complaint.id)).where(
+                Complaint.department_id == d.id,
+                Complaint.status.notin_([ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED])
+            )
+        )).scalar() or 0
+
+        results.append(
+            DepartmentResponse(
+                id=d.id,
+                code=d.code,
+                name=d.name,
+                description=d.description,
+                contact_email=d.contact_email,
+                is_active=d.is_active,
+                officer_count=off_count,
+                active_complaints_count=comp_count,
+                created_at=d.created_at,
+            )
+        )
+    return results
+
+
+@router.post("/departments", response_model=DepartmentResponse, status_code=status.HTTP_201_CREATED)
+async def create_department(
+    data: DepartmentCreateRequest,
+    current_admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new municipal department."""
+    existing = await db.execute(select(Department).where(Department.code == data.code.strip().upper()))
+    if existing.scalar_one_or_none():
+        raise ConflictException(f"Department with code '{data.code}' already exists.")
+
+    new_dept = Department(
+        code=data.code.strip().upper(),
+        name=data.name.strip(),
+        description=data.description.strip(),
+        contact_email=data.contact_email.strip().lower(),
+        is_active=True,
+    )
+    db.add(new_dept)
+    await db.commit()
+    await db.refresh(new_dept)
+
+    return DepartmentResponse(
+        id=new_dept.id,
+        code=new_dept.code,
+        name=new_dept.name,
+        description=new_dept.description,
+        contact_email=new_dept.contact_email,
+        is_active=new_dept.is_active,
+        officer_count=0,
+        active_complaints_count=0,
+        created_at=new_dept.created_at,
+    )
+
+
+@router.patch("/departments/{department_id}", response_model=DepartmentResponse)
+async def update_department(
+    department_id: str,
+    data: DepartmentUpdateRequest,
+    current_admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update department details and operational activation status."""
+    dept = (await db.execute(select(Department).where(Department.id == department_id))).scalar_one_or_none()
+    if not dept:
+        raise EntityNotFoundException("Department", department_id)
+
+    if data.name is not None:
+        dept.name = data.name.strip()
+    if data.description is not None:
+        dept.description = data.description.strip()
+    if data.contact_email is not None:
+        dept.contact_email = data.contact_email.strip().lower()
+    if data.is_active is not None:
+        dept.is_active = data.is_active
+
+    await db.commit()
+    await db.refresh(dept)
+
+    off_count = (await db.execute(
+        select(func.count(User.id)).where(User.department_id == dept.id, User.role == UserRole.OFFICER)
+    )).scalar() or 0
+
+    comp_count = (await db.execute(
+        select(func.count(Complaint.id)).where(
+            Complaint.department_id == dept.id,
+            Complaint.status.notin_([ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED])
+        )
+    )).scalar() or 0
+
+    return DepartmentResponse(
+        id=dept.id,
+        code=dept.code,
+        name=dept.name,
+        description=dept.description,
+        contact_email=dept.contact_email,
+        is_active=dept.is_active,
+        officer_count=off_count,
+        active_complaints_count=comp_count,
+        created_at=dept.created_at,
+    )

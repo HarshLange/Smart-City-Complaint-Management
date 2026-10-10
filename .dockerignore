@@ -1,0 +1,62 @@
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Node.js & Frontend (Cloudflare Pages builds frontend independently)
+frontend/
+node_modules/
+
+# Python virtual environments & test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases and backups (Container must be completely stateless)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/smart_city.db
+backend/backups/
+backups/
+
+# Local storage uploads and logs
+backend/storage/uploads/
+backend/storage/evidence/
+backend/storage/temp/
+storage/
+logs/
+*.log
+
+# Environment files and credentials
+.env
+.env.*
+backend/.env
+backend/.env.*
+
+# Large backup archives
+*.zip
+*.tar
+*.tar.gz
+TP100_FULL_WORKING_BACKUP.zip
+TP100_Deployment_and_Report.zip
+
+# IDE and OS artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Documentation and reports
+docs/
+DEMO_DEPLOYMENT_COMPATIBILITY_AUDIT.md

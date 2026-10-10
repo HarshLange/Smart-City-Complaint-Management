@@ -12,6 +12,7 @@ class AppException(HTTPException):
         error_code: str = "INTERNAL_ERROR",
         extra: Optional[Any] = None,
     ):
+        self.error_code = error_code
         super().__init__(
             status_code=status_code,
             detail={"error_code": error_code, "message": detail, "extra": extra},
@@ -87,4 +88,18 @@ class InferenceException(AppException):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=detail,
             error_code="INFERENCE_FAILED",
+        )
+
+
+class StorageException(AppException):
+    def __init__(
+        self,
+        detail: str = "Storage operation failed. Unable to persist or retrieve file object.",
+        error_code: str = "STORAGE_ERROR",
+        status_code: int = status.HTTP_502_BAD_GATEWAY,
+    ):
+        super().__init__(
+            status_code=status_code,
+            detail=detail,
+            error_code=error_code,
         )

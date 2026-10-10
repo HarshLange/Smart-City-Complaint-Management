@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Cpu,
+  Edit2,
   FileText,
   Filter,
   Plus,
@@ -15,6 +16,7 @@ import {
   Shield,
   Sliders,
   UserCheck,
+  UserCog,
   UserPlus,
   Users,
   X,
@@ -35,10 +37,12 @@ export const AdminDashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [officers, setOfficers] = useState<User[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<"COMPLAINTS" | "PROVISION" | "AUDIT">("COMPLAINTS");
+  const [activeTab, setActiveTab] = useState<"COMPLAINTS" | "DEPARTMENTS" | "OFFICERS" | "AUDIT">("COMPLAINTS");
 
   // Filtering
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -50,30 +54,52 @@ export const AdminDashboard: React.FC = () => {
   const [provPassword, setProvPassword] = useState("");
   const [provName, setProvName] = useState("");
   const [provDeptId, setProvDeptId] = useState("");
+  const [provPhone, setProvPhone] = useState("");
   const [provLoading, setProvLoading] = useState(false);
   const [provSuccess, setProvSuccess] = useState<string | null>(null);
   const [provError, setProvError] = useState<string | null>(null);
 
-  // Audit Logs
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  // Department Modals State
+  const [createDeptOpen, setCreateDeptOpen] = useState(false);
+  const [newDeptCode, setNewDeptCode] = useState("");
+  const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptDesc, setNewDeptDesc] = useState("");
+  const [newDeptEmail, setNewDeptEmail] = useState("");
+  const [deptSubmitting, setDeptSubmitting] = useState(false);
+
+  const [editDept, setEditDept] = useState<Department | null>(null);
+  const [editDeptName, setEditDeptName] = useState("");
+  const [editDeptDesc, setEditDeptDesc] = useState("");
+  const [editDeptEmail, setEditDeptEmail] = useState("");
+  const [editDeptActive, setEditDeptActive] = useState(true);
+
+  // Complaint Assignment Modal State
+  const [assignComplaint, setAssignComplaint] = useState<Complaint | null>(null);
+  const [assignOfficerId, setAssignOfficerId] = useState("");
+  const [assignNotes, setAssignNotes] = useState("");
+  const [assignLoading, setAssignLoading] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [analyticsData, deptsData, complaintsData, logsData] = await Promise.all([
+      const [analyticsData, deptsData, complaintsData, officersData, logsData] = await Promise.all([
         api.getAdminAnalytics(),
-        api.getDepartments(),
+        api.adminGetDepartments(),
         api.getAllComplaints(
           statusFilter ? (statusFilter as ComplaintStatus) : undefined,
           deptFilter || undefined,
           searchQuery || undefined
         ),
-        api.getAuditLogs(30),
+        api.listUsers("OFFICER"),
+        api.getAuditLogs(40),
       ]);
       setAnalytics(analyticsData);
       setDepartments(deptsData);
       setComplaints(complaintsData);
+      setOfficers(officersData);
       setAuditLogs(logsData);
+
       if (deptsData.length > 0 && !provDeptId) {
         setProvDeptId(deptsData[0].id);
       }
@@ -93,6 +119,7 @@ export const AdminDashboard: React.FC = () => {
     loadData();
   };
 
+  // Provision Officer Handler
   const handleProvisionOfficer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!provEmail || !provPassword || !provName || !provDeptId) return;
@@ -104,151 +131,231 @@ export const AdminDashboard: React.FC = () => {
         email: provEmail.trim(),
         password: provPassword,
         full_name: provName.trim(),
+        phone_number: provPhone.trim() || undefined,
         department_id: provDeptId,
       });
       setProvSuccess(`Officer account created successfully for ${created.full_name} (${created.email}).`);
       setProvEmail("");
       setProvPassword("");
       setProvName("");
+      setProvPhone("");
       await loadData();
     } catch (err: any) {
-      setProvError(err.message || "Failed to provision department officer.");
+      setProvError(err.message || "Failed to provision officer account.");
     } finally {
       setProvLoading(false);
+    }
+  };
+
+  // Create Department Handler
+  const handleCreateDepartment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDeptCode || !newDeptName || !newDeptEmail) return;
+    setDeptSubmitting(true);
+    try {
+      await api.adminCreateDepartment({
+        code: newDeptCode.trim().toUpperCase(),
+        name: newDeptName.trim(),
+        description: newDeptDesc.trim(),
+        contact_email: newDeptEmail.trim(),
+      });
+      setCreateDeptOpen(false);
+      setNewDeptCode("");
+      setNewDeptName("");
+      setNewDeptDesc("");
+      setNewDeptEmail("");
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || "Failed to create department.");
+    } finally {
+      setDeptSubmitting(false);
+    }
+  };
+
+  // Edit Department Handler
+  const handleSaveEditDepartment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editDept) return;
+    setDeptSubmitting(true);
+    try {
+      await api.adminUpdateDepartment(editDept.id, {
+        name: editDeptName.trim(),
+        description: editDeptDesc.trim(),
+        contact_email: editDeptEmail.trim(),
+        is_active: editDeptActive,
+      });
+      setEditDept(null);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || "Failed to update department.");
+    } finally {
+      setDeptSubmitting(false);
+    }
+  };
+
+  // Toggle Officer Active Status
+  const handleToggleOfficerStatus = async (officer: User) => {
+    try {
+      await api.adminUpdateUser(officer.id, {
+        is_active: !officer.is_active,
+      });
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || "Failed to change officer status.");
+    }
+  };
+
+  // Change Officer Department
+  const handleChangeOfficerDept = async (officer: User, newDeptId: string) => {
+    try {
+      await api.adminUpdateUser(officer.id, {
+        department_id: newDeptId,
+      });
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || "Failed to reassign officer department.");
+    }
+  };
+
+  // Assign Officer to Complaint
+  const handleAssignOfficerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignComplaint || !assignOfficerId) return;
+    setAssignLoading(true);
+    try {
+      await api.assignOfficer(assignComplaint.id, assignOfficerId, assignNotes.trim() || undefined);
+      setAssignComplaint(null);
+      setAssignOfficerId("");
+      setAssignNotes("");
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || "Failed to assign officer to complaint.");
+    } finally {
+      setAssignLoading(false);
     }
   };
 
   return (
     <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Administrator Console Header */}
+        {/* Executive Header Banner */}
         <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-gov-navy bg-slate-100 px-2.5 py-0.5 rounded border border-slate-300 uppercase tracking-wider">
-                System Oversight & Governance
+                Municipal Administration Console
               </span>
-              <span className="text-xs text-slate-500">• Municipal Administrator</span>
+              <span className="text-xs text-slate-500">• City Operations Command</span>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
-              Municipal Administrator Console
+              Civic Operations & Governance
             </h1>
             <p className="text-xs text-slate-600 mt-0.5">
-              Comprehensive city-wide ticket oversight, department routing management, officer provisioning, and system audit logs.
+              Manage cross-department queues, inspect AI automated routing, provision officers, and audit system events.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               to="/admin/ai-review"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle shrink-0"
+              className="px-3.5 py-2 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center gap-1.5"
             >
-              <Cpu className="w-4 h-4" aria-hidden="true" />
+              <Cpu className="w-3.5 h-3.5" aria-hidden="true" />
               <span>AI Review Queue ({analytics?.under_review_count || 0})</span>
             </Link>
+            <button
+              type="button"
+              onClick={loadData}
+              className="px-3.5 py-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition"
+            >
+              Refresh
+            </button>
           </div>
         </div>
 
-        {/* Real System Analytics Summary */}
+        {/* Real-time System Statistics */}
         {analytics && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
             <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Total City Reports
-              </span>
-              <span className="text-xl font-bold text-slate-900 mt-0.5 block">
-                {analytics.total_complaints}
-              </span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">Total Reports</span>
+              <span className="text-2xl font-bold text-slate-900 mt-1 block">{analytics.total_complaints}</span>
             </div>
-
             <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Active In Progress
-              </span>
-              <span className="text-xl font-bold text-amber-700 mt-0.5 block">
-                {analytics.in_progress_count + analytics.assigned_count}
-              </span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">Submitted</span>
+              <span className="text-2xl font-bold text-blue-700 mt-1 block">{analytics.submitted_count}</span>
             </div>
-
             <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Field Resolved
-              </span>
-              <span className="text-xl font-bold text-emerald-700 mt-0.5 block">
-                {analytics.resolved_count + analytics.closed_count}
-              </span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">Under Review</span>
+              <span className="text-2xl font-bold text-amber-600 mt-1 block">{analytics.under_review_count}</span>
             </div>
-
             <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                AI Overrides Logged
-              </span>
-              <span className="text-xl font-bold text-indigo-700 mt-0.5 block">
-                {analytics.ai_overridden_count}
-              </span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">In Progress</span>
+              <span className="text-2xl font-bold text-indigo-700 mt-1 block">{analytics.in_progress_count}</span>
             </div>
-
             <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Active Officers
-              </span>
-              <span className="text-xl font-bold text-slate-900 mt-0.5 block">
-                {analytics.total_officers}
-              </span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">Resolved</span>
+              <span className="text-2xl font-bold text-emerald-700 mt-1 block">{analytics.resolved_count}</span>
+            </div>
+            <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block">Active Officers</span>
+              <span className="text-2xl font-bold text-slate-900 mt-1 block">{analytics.total_officers}</span>
             </div>
           </div>
         )}
 
-        {/* Department Workload Distribution */}
-        {analytics?.department_workloads && (
-          <div className="bg-white p-5 rounded-md border border-slate-200 shadow-panel space-y-3">
-            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
-              Department Workload Distribution
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {analytics.department_workloads.map((dw) => (
-                <div key={dw.department_id} className="p-3 rounded bg-slate-50 border border-slate-200 text-xs space-y-1">
-                  <div className="font-bold text-slate-900">{dw.department_name}</div>
-                  <div className="text-[11px] text-slate-500">Code: {dw.department_code}</div>
-                  <div className="pt-2 flex items-center justify-between border-t border-slate-200/80 text-[11px]">
-                    <span>Total: <strong>{dw.total_complaints}</strong></span>
-                    <span className="text-amber-700">Active: <strong>{dw.in_progress_complaints}</strong></span>
-                    <span className="text-emerald-700">Done: <strong>{dw.resolved_complaints}</strong></span>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Error Feedback */}
+        {error && (
+          <div
+            role="alert"
+            className="p-4 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-start gap-2.5"
+          >
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
         {/* Console Navigation Tabs */}
-        <div className="border-b border-slate-200 flex gap-4 text-xs font-semibold">
+        <div className="border-b border-slate-200 flex gap-5 text-xs font-semibold overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab("COMPLAINTS")}
-            className={`pb-2.5 transition border-b-2 ${
+            className={`pb-2.5 transition border-b-2 whitespace-nowrap ${
               activeTab === "COMPLAINTS"
                 ? "border-blue-700 text-blue-700"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
-            All Municipal Complaints ({complaints.length})
+            Municipal Complaints ({complaints.length})
           </button>
+
           <button
             type="button"
-            onClick={() => setActiveTab("PROVISION")}
-            className={`pb-2.5 transition border-b-2 ${
-              activeTab === "PROVISION"
+            onClick={() => setActiveTab("DEPARTMENTS")}
+            className={`pb-2.5 transition border-b-2 whitespace-nowrap ${
+              activeTab === "DEPARTMENTS"
                 ? "border-blue-700 text-blue-700"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
-            Provision Officer Accounts
+            Departments & Jurisdictions ({departments.length})
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("OFFICERS")}
+            className={`pb-2.5 transition border-b-2 whitespace-nowrap ${
+              activeTab === "OFFICERS"
+                ? "border-blue-700 text-blue-700"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Officer Accounts ({officers.length})
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab("AUDIT")}
-            className={`pb-2.5 transition border-b-2 ${
+            className={`pb-2.5 transition border-b-2 whitespace-nowrap ${
               activeTab === "AUDIT"
                 ? "border-blue-700 text-blue-700"
                 : "border-transparent text-slate-600 hover:text-slate-900"
@@ -316,6 +423,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
               {loading ? (
                 <div className="p-12 text-center text-xs text-slate-500">
+                  <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                   Loading system complaints...
                 </div>
               ) : complaints.length === 0 ? (
@@ -333,16 +441,17 @@ export const AdminDashboard: React.FC = () => {
                         <th scope="col">Category</th>
                         <th scope="col">Department</th>
                         <th scope="col">Status</th>
-                        <th scope="col" className="text-right">Action</th>
+                        <th scope="col">Assigned Officer</th>
+                        <th scope="col" className="text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {complaints.map((c) => (
-                        <tr key={c.id} className="hover:bg-slate-50/80 transition">
-                          <td className="font-mono text-xs font-semibold text-slate-800 whitespace-nowrap">
+                        <tr key={c.id} className="hover:bg-slate-50/80 transition text-xs">
+                          <td className="font-mono font-semibold text-slate-800 whitespace-nowrap">
                             {c.reference_number}
                           </td>
-                          <td className="text-xs text-slate-500 whitespace-nowrap">
+                          <td className="text-slate-500 whitespace-nowrap">
                             {new Date(c.created_at).toLocaleDateString()}
                           </td>
                           <td className="max-w-xs truncate font-medium text-slate-900">
@@ -351,18 +460,39 @@ export const AdminDashboard: React.FC = () => {
                           <td>
                             <CategoryBadge category={c.category} />
                           </td>
-                          <td className="text-xs text-slate-600 whitespace-nowrap">
-                            {c.department_name || "Assigned to Review"}
+                          <td className="text-slate-600 whitespace-nowrap">
+                            {c.department_name || "Unassigned"}
                           </td>
                           <td>
                             <StatusBadge status={c.status} />
                           </td>
-                          <td className="text-right whitespace-nowrap">
+                          <td className="text-slate-600 whitespace-nowrap">
+                            {c.assigned_officer_name ? (
+                              <span className="font-medium text-slate-800">{c.assigned_officer_name}</span>
+                            ) : (
+                              <span className="text-slate-400 italic">Unassigned</span>
+                            )}
+                          </td>
+                          <td className="text-right whitespace-nowrap space-x-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAssignComplaint(c);
+                                // Default officer to first matching department officer if available
+                                const matching = officers.filter(
+                                  (o) => o.department_id === c.department_id && o.is_active
+                                );
+                                setAssignOfficerId(matching[0]?.id || "");
+                              }}
+                              className="px-2 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded"
+                            >
+                              Assign
+                            </button>
                             <Link
                               to={`/complaints/${c.id}`}
                               className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
                             >
-                              Inspect Record
+                              Inspect
                             </Link>
                           </td>
                         </tr>
@@ -375,106 +505,305 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 2: Provision Officer Accounts */}
-        {activeTab === "PROVISION" && (
-          <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel max-w-2xl space-y-5">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                Provision Department Officer Account
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Authorized municipal administrators can create officer accounts bound to specific department authorities.
-              </p>
+        {/* Tab 2: Departments & Jurisdictions Management */}
+        {activeTab === "DEPARTMENTS" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Municipal Departments & Jurisdictions
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Configure department routing codes, update leadership contacts, and toggle service availability.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateDeptOpen(true)}
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded flex items-center gap-1.5 shadow-subtle transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Register Department</span>
+              </button>
             </div>
 
-            {provSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 rounded flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{provSuccess}</span>
+            <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse gov-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Code</th>
+                      <th scope="col">Department Name</th>
+                      <th scope="col">Description</th>
+                      <th scope="col">Contact Email</th>
+                      <th scope="col">Active Officers</th>
+                      <th scope="col">Open Tickets</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" className="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {departments.map((dept) => (
+                      <tr key={dept.id} className="hover:bg-slate-50/80 transition text-xs">
+                        <td className="font-mono font-bold text-slate-800 whitespace-nowrap">
+                          {dept.code}
+                        </td>
+                        <td className="font-semibold text-slate-900 whitespace-nowrap">
+                          {dept.name}
+                        </td>
+                        <td className="text-slate-600 max-w-xs truncate">
+                          {dept.description}
+                        </td>
+                        <td className="text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                          {dept.contact_email}
+                        </td>
+                        <td className="text-slate-800 font-bold whitespace-nowrap">
+                          {dept.officer_count ?? 0}
+                        </td>
+                        <td className="text-blue-700 font-bold whitespace-nowrap">
+                          {dept.active_complaints_count ?? 0}
+                        </td>
+                        <td className="whitespace-nowrap">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                              dept.is_active
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-red-50 text-red-800 border border-red-200"
+                            }`}
+                          >
+                            {dept.is_active ? "Operational" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="text-right whitespace-nowrap space-x-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditDept(dept);
+                              setEditDeptName(dept.name);
+                              setEditDeptDesc(dept.description);
+                              setEditDeptEmail(dept.contact_email);
+                              setEditDeptActive(dept.is_active);
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-
-            {provError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-800 rounded flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <span>{provError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleProvisionOfficer} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-800 mb-1">
-                  Officer Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={provName}
-                  onChange={(e) => setProvName(e.target.value)}
-                  placeholder="e.g. Marcus Vance"
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-800 mb-1">
-                  Official Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={provEmail}
-                  onChange={(e) => setProvEmail(e.target.value)}
-                  placeholder="marcus.vance@smartcity.gov"
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-800 mb-1">
-                  Assigned Municipal Department
-                </label>
-                <select
-                  required
-                  value={provDeptId}
-                  onChange={(e) => setProvDeptId(e.target.value)}
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
-                >
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-800 mb-1">
-                  Initial Temporary Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={provPassword}
-                  onChange={(e) => setProvPassword(e.target.value)}
-                  placeholder="Minimum 8 characters"
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={provLoading}
-                className="px-5 py-2.5 rounded text-xs font-semibold text-white bg-gov-navy hover:bg-slate-800 transition disabled:opacity-50"
-              >
-                {provLoading ? "Provisioning..." : "Provision Officer Account"}
-              </button>
-            </form>
+            </div>
           </div>
         )}
 
-        {/* Tab 3: Security & System Audit Log */}
+        {/* Tab 3: Officer Accounts Management & Provisioning */}
+        {activeTab === "OFFICERS" && (
+          <div className="space-y-6">
+            {/* Registered Officers Table */}
+            <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden space-y-3">
+              <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Authorized Department Officers
+                  </h2>
+                  <p className="text-[11px] text-slate-500">
+                    Municipal personnel with ticket inspection, investigation notes, and status update authority.
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200">
+                  {officers.length} provisioned officers
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse gov-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Officer Name</th>
+                      <th scope="col">Official Email</th>
+                      <th scope="col">Assigned Department</th>
+                      <th scope="col">Account Status</th>
+                      <th scope="col">Provisioned Date</th>
+                      <th scope="col" className="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {officers.map((officer) => (
+                      <tr key={officer.id} className="hover:bg-slate-50/80 transition text-xs">
+                        <td className="font-semibold text-slate-900 whitespace-nowrap">
+                          {officer.full_name}
+                        </td>
+                        <td className="text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                          {officer.email}
+                        </td>
+                        <td className="whitespace-nowrap">
+                          <select
+                            value={officer.department_id || ""}
+                            onChange={(e) => handleChangeOfficerDept(officer, e.target.value)}
+                            className="px-2 py-1 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:ring-1 focus:ring-blue-700"
+                          >
+                            <option value="" disabled>-- Assign Department --</option>
+                            {departments.map((d) => (
+                              <option key={d.id} value={d.id}>
+                                {d.name} ({d.code})
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="whitespace-nowrap">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                              officer.is_active
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-red-50 text-red-800 border border-red-200"
+                            }`}
+                          >
+                            {officer.is_active ? "Active" : "Deactivated"}
+                          </span>
+                        </td>
+                        <td className="text-slate-500 whitespace-nowrap">
+                          {new Date(officer.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleOfficerStatus(officer)}
+                            className={`px-2.5 py-1 text-xs font-semibold rounded border transition ${
+                              officer.is_active
+                                ? "text-red-700 bg-red-50 hover:bg-red-100 border-red-200"
+                                : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200"
+                            }`}
+                          >
+                            {officer.is_active ? "Deactivate" : "Activate"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Provision New Officer Form */}
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel max-w-2xl space-y-5">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <UserPlus className="w-4 h-4 text-blue-700" aria-hidden="true" />
+                  <span>Provision New Officer Account</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Authorized administrators create verified officer credentials scoped strictly to department jurisdiction.
+                </p>
+              </div>
+
+              {provSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 rounded flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{provSuccess}</span>
+                </div>
+              )}
+
+              {provError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-800 rounded flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{provError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleProvisionOfficer} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Officer Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={provName}
+                      onChange={(e) => setProvName(e.target.value)}
+                      placeholder="e.g. Marcus Vance"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Contact Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={provPhone}
+                      onChange={(e) => setProvPhone(e.target.value)}
+                      placeholder="+1 (555) 019-2834"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Official Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={provEmail}
+                      onChange={(e) => setProvEmail(e.target.value)}
+                      placeholder="marcus.vance@smartcity.gov"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Initial Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={provPassword}
+                      onChange={(e) => setProvPassword(e.target.value)}
+                      placeholder="Minimum 8 characters"
+                      className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
+                    Assigned Municipal Department *
+                  </label>
+                  <select
+                    required
+                    value={provDeptId}
+                    onChange={(e) => setProvDeptId(e.target.value)}
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
+                  >
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={provLoading}
+                  className="px-5 py-2.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition disabled:opacity-50 shadow-subtle"
+                >
+                  {provLoading ? "Provisioning..." : "Provision Officer Account"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Security & System Audit Log */}
         {activeTab === "AUDIT" && (
           <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
             <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
@@ -491,8 +820,8 @@ export const AdminDashboard: React.FC = () => {
                   <tr>
                     <th scope="col">Timestamp</th>
                     <th scope="col">Action Type</th>
-                    <th scope="col">Actor Role</th>
-                    <th scope="col">Entity ID</th>
+                    <th scope="col">Actor Email</th>
+                    <th scope="col">IP Address</th>
                     <th scope="col">Details</th>
                   </tr>
                 </thead>
@@ -503,15 +832,13 @@ export const AdminDashboard: React.FC = () => {
                         {new Date(log.created_at).toLocaleString()}
                       </td>
                       <td className="font-mono font-semibold text-slate-800 whitespace-nowrap">
-                        {log.action}
+                        {log.action_type}
                       </td>
-                      <td className="whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px] font-semibold text-slate-700">
-                          {log.actor_role}
-                        </span>
+                      <td className="text-slate-700 whitespace-nowrap">
+                        {log.actor_email || "System"}
                       </td>
                       <td className="font-mono text-slate-500 text-[11px] whitespace-nowrap">
-                        {log.entity_id ? log.entity_id.substring(0, 8) + "..." : "System"}
+                        {log.ip_address || "Internal"}
                       </td>
                       <td className="text-slate-600 max-w-md truncate">
                         {log.details ? JSON.stringify(log.details) : "—"}
@@ -524,6 +851,291 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal 1: Register New Department */}
+      {createDeptOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-dept-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 id="create-dept-title" className="text-base font-bold text-slate-900">
+                Register Municipal Department
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCreateDeptOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDepartment} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
+                    Department Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. PARKS"
+                    value={newDeptCode}
+                    onChange={(e) => setNewDeptCode(e.target.value)}
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs font-mono uppercase focus:ring-2 focus:ring-blue-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
+                    Official Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="parks@smartcity.gov"
+                    value={newDeptEmail}
+                    onChange={(e) => setNewDeptEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Department Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Parks and Public Recreation Department"
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Jurisdiction & Scope Description *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Municipal maintenance of city parks, public playgrounds, and botanical reserves."
+                  value={newDeptDesc}
+                  onChange={(e) => setNewDeptDesc(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCreateDeptOpen(false)}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={deptSubmitting}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded disabled:opacity-50"
+                >
+                  {deptSubmitting ? "Registering..." : "Register Department"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: Edit Department */}
+      {editDept && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-dept-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase">
+                  Code: {editDept.code}
+                </span>
+                <h3 id="edit-dept-title" className="text-base font-bold text-slate-900 mt-0.5">
+                  Edit Department Configuration
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditDept(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditDepartment} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Department Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editDeptName}
+                  onChange={(e) => setEditDeptName(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Official Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={editDeptEmail}
+                  onChange={(e) => setEditDeptEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Jurisdiction Scope
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editDeptDesc}
+                  onChange={(e) => setEditDeptDesc(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="dept-active-toggle"
+                  checked={editDeptActive}
+                  onChange={(e) => setEditDeptActive(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-700 focus:ring-blue-700"
+                />
+                <label htmlFor="dept-active-toggle" className="text-xs font-semibold text-slate-800 cursor-pointer">
+                  Department is active for automated AI ticket routing
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditDept(null)}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={deptSubmitting}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded disabled:opacity-50"
+                >
+                  {deptSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 3: Assign Officer to Complaint */}
+      {assignComplaint && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="assign-modal-title"
+        >
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase">
+                  {assignComplaint.reference_number} • {assignComplaint.department_name || "Department Review"}
+                </span>
+                <h3 id="assign-modal-title" className="text-base font-bold text-slate-900 mt-0.5">
+                  Assign Officer to Case
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAssignComplaint(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAssignOfficerSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Select Department Officer
+                </label>
+                <select
+                  required
+                  value={assignOfficerId}
+                  onChange={(e) => setAssignOfficerId(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
+                >
+                  <option value="" disabled>-- Select Officer --</option>
+                  {officers
+                    .filter((o) => o.is_active)
+                    .map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.full_name} ({o.department_name || "General"})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 mb-1">
+                  Assignment Instructions / Field Note (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={assignNotes}
+                  onChange={(e) => setAssignNotes(e.target.value)}
+                  placeholder="e.g. High priority road hazard. Inspect pothole and dispatch hot-mix patching crew."
+                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setAssignComplaint(null)}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={assignLoading || !assignOfficerId}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded disabled:opacity-50"
+                >
+                  {assignLoading ? "Assigning..." : "Confirm Assignment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

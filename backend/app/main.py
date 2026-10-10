@@ -23,10 +23,13 @@ async def lifespan(app: FastAPI):
     """Application startup & shutdown lifespan events."""
     logger.info("Initializing Smart City Complaint Management Backend...")
 
-    # 1. Initialize schema in development / SQLite
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database schema verified/created.")
+    # 1. Initialize schema in development / SQLite only (PostgreSQL uses Alembic)
+    if settings.DATABASE_URL.startswith("sqlite"):
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("SQLite database schema verified/created via create_all.")
+    else:
+        logger.info("PostgreSQL mode detected: schema management is managed exclusively via Alembic.")
 
     # 2. Seed initial departments, administrator, and demo accounts
     async with AsyncSessionLocal() as session:
