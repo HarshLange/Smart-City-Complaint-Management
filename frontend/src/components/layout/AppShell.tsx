@@ -209,7 +209,54 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     ];
   };
 
+  // Define bottom navigation items for mobile touch viewports
+  const getBottomNavItems = () => {
+    if (!user) return [];
+
+    if (user.role === "ADMIN") {
+      return [
+        { label: "Console", path: "/admin", icon: LayoutDashboard },
+        { label: "AI Review", path: "/admin/ai-review", icon: Cpu },
+        { label: "Directory", path: "/departments", icon: Building2 },
+        {
+          label: "Menu",
+          icon: Menu,
+          isAction: true,
+          action: () => setSidebarOpen(true),
+        },
+      ];
+    }
+
+    if (user.role === "OFFICER") {
+      return [
+        { label: "Queue", path: "/workspace", icon: LayoutDashboard },
+        { label: "Track", path: "/track", icon: FileSearch },
+        { label: "Directory", path: "/departments", icon: Building2 },
+        {
+          label: "Menu",
+          icon: Menu,
+          isAction: true,
+          action: () => setSidebarOpen(true),
+        },
+      ];
+    }
+
+    // Default: CITIZEN
+    return [
+      { label: "Complaints", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Report", path: "/report", icon: FilePlus, isPrimary: true },
+      { label: "Track", path: "/track", icon: FileSearch },
+      {
+        label: "Menu",
+        icon: Menu,
+        isAction: true,
+        action: () => setSidebarOpen(true),
+      },
+    ];
+  };
+
   const navItems = getNavItems();
+  const bottomNavItems = getBottomNavItems();
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -217,15 +264,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Sticky Government Shell Top Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-subtle">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left: Mobile Toggle & Brand */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {isAuthenticated && (
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden p-2 rounded text-slate-700 hover:bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className="lg:hidden min-h-[44px] min-w-[44px] p-2 rounded-md text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                   aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
                   aria-expanded={sidebarOpen}
                 >
@@ -235,17 +282,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
               <Link
                 to="/"
-                className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded p-1"
+                className="flex items-center gap-2 sm:gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded-md p-1 min-h-[44px] touch-manipulation"
                 aria-label="CivicPulse - Home"
               >
-                <div className="w-9 h-9 rounded bg-gov-navy text-white flex items-center justify-center shrink-0 border border-slate-700">
-                  <Building2 className="w-5 h-5 text-blue-200" aria-hidden="true" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-gov-navy text-white flex items-center justify-center shrink-0 border border-slate-700">
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-200" aria-hidden="true" />
                 </div>
                 <div>
-                  <span className="font-bold text-base sm:text-lg text-slate-900 tracking-tight block leading-tight">
+                  <span className="font-bold text-sm sm:text-lg text-slate-900 tracking-tight block leading-tight">
                     CivicPulse
                   </span>
-                  <span className="text-[10px] text-slate-500 block leading-none font-medium uppercase tracking-wider">
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 block leading-none font-medium uppercase tracking-wider">
                     Smart City Portal
                   </span>
                 </div>
@@ -253,7 +300,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </div>
 
             {/* Right: Actions, Notifications, Profile */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {isAuthenticated && user ? (
                 <>
                   {/* Notification Center Popover */}
@@ -261,19 +308,19 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     <button
                       type="button"
                       onClick={() => setNotifOpen(!notifOpen)}
-                      className="p-2 rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 relative transition focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      className="min-h-[44px] min-w-[44px] p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 relative transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                       aria-label={`Notifications, ${unreadCount} unread`}
                       aria-expanded={notifOpen}
                     >
                       <Bell className="w-5 h-5" aria-hidden="true" />
                       {unreadCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-700 rounded-full ring-2 ring-white" />
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-blue-700 rounded-full ring-2 ring-white" />
                       )}
                     </button>
 
                     {notifOpen && (
                       <div
-                        className="absolute right-0 mt-2 w-80 bg-white rounded border border-slate-200 shadow-modal py-2 z-50 animate-in fade-in duration-100"
+                        className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-md border border-slate-200 shadow-modal py-2 z-50 animate-in fade-in duration-100"
                         role="dialog"
                         aria-label="Notification center"
                       >
@@ -285,7 +332,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                             <button
                               type="button"
                               onClick={markAllRead}
-                              className="text-xs text-blue-700 hover:underline flex items-center gap-1 font-medium"
+                              className="text-xs text-blue-700 hover:underline flex items-center gap-1 font-medium min-h-[36px] px-1"
                             >
                               <Check className="w-3 h-3" /> Mark read
                             </button>
@@ -322,11 +369,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     <button
                       type="button"
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center gap-2 pl-2 pr-1 py-1 rounded text-left hover:bg-slate-50 transition border border-transparent hover:border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      className="min-h-[44px] flex items-center gap-1.5 sm:gap-2 pl-2 pr-1 py-1 rounded-md text-left hover:bg-slate-50 transition border border-transparent hover:border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                       aria-expanded={profileDropdownOpen}
                       aria-haspopup="true"
                     >
-                      <div className="w-7 h-7 rounded-full bg-gov-navy text-white flex items-center justify-center font-bold text-xs uppercase">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gov-navy text-white flex items-center justify-center font-bold text-xs uppercase">
                         {user.full_name?.charAt(0) || "U"}
                       </div>
                       <div className="hidden sm:block text-left">
@@ -342,7 +389,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
                     {profileDropdownOpen && (
                       <div
-                        className="absolute right-0 mt-2 w-56 bg-white rounded border border-slate-200 shadow-modal py-1.5 z-50 text-xs"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-md border border-slate-200 shadow-modal py-1.5 z-50 text-xs"
                         role="menu"
                       >
                         <div className="px-4 py-2 border-b border-slate-100">
@@ -357,7 +404,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           {user.role === "CITIZEN" && (
                             <Link
                               to="/dashboard"
-                              className="block px-4 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                              className="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 min-h-[36px]"
                               role="menuitem"
                             >
                               My Complaints Dashboard
@@ -366,7 +413,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           {user.role === "OFFICER" && (
                             <Link
                               to="/workspace"
-                              className="block px-4 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                              className="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 min-h-[36px]"
                               role="menuitem"
                             >
                               Officer Operations Queue
@@ -375,7 +422,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           {user.role === "ADMIN" && (
                             <Link
                               to="/admin"
-                              className="block px-4 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                              className="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 min-h-[36px]"
                               role="menuitem"
                             >
                               Administration Console
@@ -383,7 +430,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           )}
                           <Link
                             to="/help"
-                            className="block px-4 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                            className="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 min-h-[36px]"
                             role="menuitem"
                           >
                             Municipal Help Center
@@ -394,10 +441,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           <button
                             type="button"
                             onClick={handleLogout}
-                            className="w-full text-left px-4 py-1.5 text-red-700 hover:bg-red-50 flex items-center gap-1.5 font-semibold"
+                            className="w-full text-left px-4 py-2 text-red-700 hover:bg-red-50 flex items-center gap-1.5 font-semibold min-h-[40px]"
                             role="menuitem"
                           >
-                            <LogOut className="w-3.5 h-3.5" />
+                            <LogOut className="w-4 h-4" />
                             <span>Sign Out</span>
                           </button>
                         </div>
@@ -409,13 +456,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-3 py-1.5 rounded text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition"
+                    className="min-h-[44px] px-3 py-2 rounded text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition flex items-center"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="px-3.5 py-1.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle"
+                    className="min-h-[44px] px-3.5 py-2 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center"
                   >
                     Create Account
                   </Link>
@@ -496,31 +543,37 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               </div>
             </aside>
 
-            {/* Mobile Slide-over Drawer */}
+            {/* Mobile Slide-over Drawer with Backdrop Dismiss */}
             {sidebarOpen && (
               <div
-                className="lg:hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex"
+                className="lg:hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex transition-opacity"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Mobile workspace menu"
+                onClick={() => setSidebarOpen(false)}
               >
-                <div className="w-72 bg-white h-full flex flex-col shadow-modal">
-                  <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                <div
+                  className="w-72 sm:w-80 bg-white h-full flex flex-col shadow-modal max-w-[85vw]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                     <div>
                       <span className="text-xs font-bold text-slate-900 block">CivicPulse Workspace</span>
-                      <span className="text-[10px] text-slate-500">{user.role} • {user.email}</span>
+                      <span className="text-[11px] text-slate-600 block mt-0.5">
+                        <strong className="text-blue-700 uppercase">{user.role}</strong> • {user.email}
+                      </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSidebarOpen(false)}
-                      className="p-1 rounded text-slate-400 hover:text-slate-600"
+                      className="min-h-[44px] min-w-[44px] p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center touch-manipulation"
                       aria-label="Close menu"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+                  <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
                     {navItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = location.pathname === item.path;
@@ -529,18 +582,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           key={item.path}
                           to={item.path}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded text-xs font-medium ${
+                          className={`flex items-center justify-between px-3 py-3 rounded-md text-xs font-semibold min-h-[44px] transition touch-manipulation ${
                             isActive
-                              ? "bg-blue-50 text-blue-700 font-semibold border border-blue-200"
-                              : "text-slate-700 hover:bg-slate-100"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "text-slate-700 hover:bg-slate-100 active:bg-slate-200"
                           }`}
                         >
-                          <div className="flex items-center gap-2.5">
-                            <Icon className="w-4 h-4" />
+                          <div className="flex items-center gap-3">
+                            <Icon className={`w-4 h-4 ${isActive ? "text-blue-700" : "text-slate-500"}`} />
                             <span>{item.label}</span>
                           </div>
                           {item.badge && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-semibold">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-semibold">
                               {item.badge}
                             </span>
                           )}
@@ -549,13 +602,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     })}
                   </nav>
 
-                  <div className="p-4 border-t border-slate-100">
+                  <div className="p-4 border-t border-slate-200 pb-safe">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full py-2 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded flex items-center justify-center gap-1.5"
+                      className="w-full min-h-[44px] py-2.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 active:bg-red-200 border border-red-200 rounded-md flex items-center justify-center gap-2 touch-manipulation transition"
                     >
-                      <LogOut className="w-3.5 h-3.5" />
+                      <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
                     </button>
                   </div>
@@ -565,11 +618,73 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           </>
         )}
 
-        {/* Dynamic Main Workspace Content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Dynamic Main Workspace Content (padded at bottom on mobile to accommodate BottomNav) */}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Thumb Zone) */}
+      {isAuthenticated && user && (
+        <nav
+          aria-label="Mobile Bottom Navigation"
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] pb-safe"
+        >
+          <div className="grid grid-cols-4 h-16 max-w-md mx-auto items-center px-1">
+            {bottomNavItems.map((item, idx) => {
+              const Icon = item.icon;
+              const isActive = item.path ? location.pathname === item.path : false;
+
+              if (item.isAction) {
+                return (
+                  <button
+                    key={`bnav-${idx}`}
+                    type="button"
+                    onClick={item.action}
+                    className="flex flex-col items-center justify-center h-full text-slate-600 hover:text-slate-900 active:text-blue-700 touch-manipulation focus:outline-none"
+                    aria-label={item.label}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[10px] font-medium mt-1 leading-tight">{item.label}</span>
+                  </button>
+                );
+              }
+
+              if (item.isPrimary) {
+                return (
+                  <Link
+                    key={`bnav-${idx}`}
+                    to={item.path!}
+                    className="flex flex-col items-center justify-center h-full touch-manipulation focus:outline-none"
+                    aria-label={item.label}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center shadow-md active:bg-blue-800 transition -mt-3 border-2 border-white">
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-700 mt-0.5 leading-tight">
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              }
+
+              return (
+                <Link
+                  key={`bnav-${idx}`}
+                  to={item.path!}
+                  className={`flex flex-col items-center justify-center h-full touch-manipulation focus:outline-none transition ${
+                    isActive ? "text-blue-700 font-semibold" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  aria-label={item.label}
+                >
+                  <Icon className={`w-5 h-5 ${isActive ? "text-blue-700" : "text-slate-500"}`} />
+                  <span className="text-[10px] mt-1 leading-tight">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 };

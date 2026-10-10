@@ -57,7 +57,7 @@ export const FAQPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Return to Overview</span>
@@ -77,15 +77,15 @@ export const FAQPage: React.FC = () => {
         </div>
 
         {/* Search Filter Bar */}
-        <div className="bg-white p-3.5 rounded-md border border-slate-200 shadow-subtle">
+        <div className="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 shadow-subtle">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 sm:top-2.5 pointer-events-none" />
             <input
               type="text"
               placeholder="Search questions by keyword (e.g. tracking, PIN, photo, pothole)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+              className="w-full pl-9 pr-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
             />
           </div>
         </div>
@@ -107,7 +107,7 @@ export const FAQPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setExpandedFaq(isOpen ? null : index)}
-                    className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 font-semibold text-sm text-slate-900 hover:bg-slate-50 transition"
+                    className="w-full text-left px-4 sm:px-5 py-3.5 sm:py-4 min-h-[48px] flex items-center justify-between gap-3 sm:gap-4 font-semibold text-sm text-slate-900 hover:bg-slate-50 transition"
                     aria-expanded={isOpen}
                   >
                     <div>

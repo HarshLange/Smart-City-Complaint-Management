@@ -49,7 +49,7 @@ export const HelpCenterPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Return to Overview</span>
@@ -74,7 +74,7 @@ export const HelpCenterPage: React.FC = () => {
             return (
               <div
                 key={idx}
-                className="bg-white p-6 rounded-md border border-slate-200 shadow-subtle flex flex-col justify-between space-y-4"
+                className="bg-white p-5 sm:p-6 rounded-md border border-slate-200 shadow-subtle flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   <div className="w-9 h-9 rounded bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center">
@@ -86,7 +86,7 @@ export const HelpCenterPage: React.FC = () => {
                 <div>
                   <Link
                     to={g.link}
-                    className="text-xs font-semibold text-blue-700 hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-semibold text-blue-700 hover:underline min-h-[44px] sm:min-h-0 inline-flex items-center gap-1"
                   >
                     <span>Read Guidance</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export const HelpCenterPage: React.FC = () => {
         </div>
 
         {/* Helpline Contact Card */}
-        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-white p-5 sm:p-6 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <h3 className="text-sm font-bold text-slate-900">Need Personalized Assistance?</h3>
             <p className="text-xs text-slate-600">
@@ -107,7 +107,7 @@ export const HelpCenterPage: React.FC = () => {
           </div>
           <Link
             to="/contact"
-            className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold shadow-subtle transition shrink-0 flex items-center gap-1.5"
+            className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 sm:py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold shadow-subtle transition shrink-0 flex items-center justify-center gap-1.5"
           >
             <PhoneCall className="w-3.5 h-3.5" />
             <span>Contact Support</span>

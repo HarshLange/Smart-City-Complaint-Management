@@ -72,7 +72,7 @@ export const DepartmentDirectoryPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Return to Overview</span>
@@ -97,11 +97,11 @@ export const DepartmentDirectoryPage: React.FC = () => {
             return (
               <div
                 key={dept.code}
-                className="bg-white p-6 rounded-md border border-slate-200 shadow-subtle space-y-4"
+                className="bg-white p-5 sm:p-6 rounded-md border border-slate-200 shadow-subtle space-y-4"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center shrink-0">
                       <Icon className="w-5 h-5" aria-hidden="true" />
                     </div>
                     <div>
@@ -134,15 +134,15 @@ export const DepartmentDirectoryPage: React.FC = () => {
                   </ul>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-4 text-xs text-slate-600">
-                  <div className="flex items-center gap-1.5">
+                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-600">
+                  <a href={`mailto:${dept.email}`} className="flex items-center gap-1.5 min-h-[44px] sm:min-h-0 text-slate-700 hover:text-blue-700">
                     <Mail className="w-3.5 h-3.5 text-slate-400" />
                     <span className="font-mono text-[11px]">{dept.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
+                  </a>
+                  <a href={`tel:${dept.phone}`} className="flex items-center gap-1.5 min-h-[44px] sm:min-h-0 text-slate-700 hover:text-blue-700">
                     <Phone className="w-3.5 h-3.5 text-slate-400" />
                     <span className="font-mono text-[11px]">{dept.phone}</span>
-                  </div>
+                  </a>
                 </div>
               </div>
             );

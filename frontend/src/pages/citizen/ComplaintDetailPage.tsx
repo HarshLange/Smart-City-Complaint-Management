@@ -108,29 +108,29 @@ export const ComplaintDetailPage: React.FC = () => {
     (user?.role === "ADMIN" || complaint.user_id === user?.id);
 
   return (
-    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div id="main-content" className="min-h-screen bg-slate-50 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 pb-20 lg:pb-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
+            className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white px-3 py-2 rounded-md border border-slate-200 shadow-subtle transition touch-manipulation"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Back to Dashboard</span>
           </button>
 
-          <span className="text-xs font-mono text-slate-500">
-            Case ID: {complaint.reference_number}
+          <span className="text-xs font-mono text-slate-500 font-semibold truncate max-w-[160px] sm:max-w-none">
+            Case: {complaint.reference_number}
           </span>
         </div>
 
         {/* Case Record Header Banner */}
-        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div className="bg-white p-4 sm:p-6 rounded-md border border-slate-200 shadow-panel space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-slate-100">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="font-mono text-xs font-bold text-slate-700 uppercase">
                   {complaint.reference_number}
                 </span>
@@ -139,7 +139,7 @@ export const ComplaintDetailPage: React.FC = () => {
                   Logged {new Date(complaint.created_at).toLocaleString()}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
                 {complaint.title}
               </h1>
             </div>
@@ -151,7 +151,7 @@ export const ComplaintDetailPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setReopenOpen(true)}
-                  className="px-3 py-1.5 rounded text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center gap-1.5 transition"
+                  className="min-h-[44px] px-3.5 py-2 rounded-md text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border border-amber-300 flex items-center justify-center gap-1.5 transition touch-manipulation w-full sm:w-auto"
                 >
                   <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Request Reopening</span>
@@ -161,28 +161,28 @@ export const ComplaintDetailPage: React.FC = () => {
           </div>
 
           {/* Operational Metadata Ribbon */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="text-slate-500 font-medium block">Responsible Department</span>
-              <span className="text-slate-900 font-semibold block mt-0.5">
-                {complaint.department_name || "Assigned to Review Queue"}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="bg-slate-50/70 p-2.5 rounded-md border border-slate-100">
+              <span className="text-slate-500 font-medium block text-[11px]">Department</span>
+              <span className="text-slate-900 font-semibold block mt-0.5 truncate">
+                {complaint.department_name || "Assigned to Review"}
               </span>
             </div>
-            <div>
-              <span className="text-slate-500 font-medium block">Assigned Officer</span>
-              <span className="text-slate-900 font-semibold block mt-0.5">
-                {complaint.assigned_officer_name || "Unassigned (Queue Pending)"}
+            <div className="bg-slate-50/70 p-2.5 rounded-md border border-slate-100">
+              <span className="text-slate-500 font-medium block text-[11px]">Assigned Officer</span>
+              <span className="text-slate-900 font-semibold block mt-0.5 truncate">
+                {complaint.assigned_officer_name || "Unassigned (Queue)"}
               </span>
             </div>
-            <div>
-              <span className="text-slate-500 font-medium block">Priority Level</span>
+            <div className="bg-slate-50/70 p-2.5 rounded-md border border-slate-100">
+              <span className="text-slate-500 font-medium block text-[11px]">Priority</span>
               <span className="text-slate-900 font-semibold uppercase block mt-0.5">
                 {complaint.priority}
               </span>
             </div>
-            <div>
-              <span className="text-slate-500 font-medium block">Reporting Citizen</span>
-              <span className="text-slate-900 font-semibold block mt-0.5">
+            <div className="bg-slate-50/70 p-2.5 rounded-md border border-slate-100">
+              <span className="text-slate-500 font-medium block text-[11px]">Citizen</span>
+              <span className="text-slate-900 font-semibold block mt-0.5 truncate">
                 {complaint.citizen_name || "Verified Citizen"}
               </span>
             </div>
@@ -347,12 +347,12 @@ export const ComplaintDetailPage: React.FC = () => {
       {/* Reopen Request Modal */}
       {reopenOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="reopen-title"
         >
-          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-6 space-y-4">
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-lg w-full p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 id="reopen-title" className="text-base font-bold text-slate-900">
                 Request Complaint Reopening
@@ -360,10 +360,10 @@ export const ComplaintDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setReopenOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-600 flex items-center justify-center rounded-md touch-manipulation"
                 aria-label="Close dialog"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -382,22 +382,22 @@ export const ComplaintDetailPage: React.FC = () => {
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}
                   placeholder="Explain why the resolution was incomplete or if the defect has recurred..."
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setReopenOpen(false)}
-                  className="px-3.5 py-1.5 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200"
+                  className="min-h-[44px] px-4 py-2 rounded-md text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 touch-manipulation text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={reopening || !reopenReason.trim()}
-                  className="px-4 py-1.5 rounded text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50"
+                  className="min-h-[44px] px-5 py-2 rounded-md text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 active:bg-amber-900 disabled:opacity-50 touch-manipulation text-center shadow-subtle"
                 >
                   {reopening ? "Submitting..." : "Confirm Reopening"}
                 </button>

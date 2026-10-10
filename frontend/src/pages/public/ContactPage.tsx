@@ -31,7 +31,7 @@ export const ContactPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-subtle transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-1.5 rounded border border-slate-200 shadow-subtle transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Return to Overview</span>
@@ -53,7 +53,7 @@ export const ContactPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           {/* Left Column: Direct Phone and Physical Address */}
           <div className="md:col-span-5 space-y-4">
-            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-subtle space-y-4 text-xs text-slate-700">
+            <div className="bg-white p-5 sm:p-6 rounded-md border border-slate-200 shadow-subtle space-y-4 text-xs text-slate-700">
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider pb-2 border-b border-slate-100">
                 Civic Center Headquarters
               </h2>
@@ -80,7 +80,9 @@ export const ContactPage: React.FC = () => {
                 <Phone className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-slate-900 block">Telephone Inquiries</strong>
-                  <p className="font-mono text-slate-800">+1 (800) 555-CIVIC</p>
+                  <a href="tel:+18005552484" className="font-mono text-blue-700 hover:underline block py-0.5">
+                    +1 (800) 555-CIVIC
+                  </a>
                   <p className="text-[11px] text-slate-500">Toll-free municipal general helpline</p>
                 </div>
               </div>
@@ -89,7 +91,9 @@ export const ContactPage: React.FC = () => {
                 <Mail className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-slate-900 block">General Electronic Inquiries</strong>
-                  <p className="font-mono text-slate-800">citizen.support@smartcity.gov</p>
+                  <a href="mailto:citizen.support@smartcity.gov" className="font-mono text-blue-700 hover:underline block py-0.5">
+                    citizen.support@smartcity.gov
+                  </a>
                 </div>
               </div>
             </div>
@@ -107,7 +111,7 @@ export const ContactPage: React.FC = () => {
           </div>
 
           {/* Right Column: Citizen Inquiry Form */}
-          <div className="md:col-span-7 bg-white p-6 sm:p-7 rounded-md border border-slate-200 shadow-panel">
+          <div className="md:col-span-7 bg-white p-5 sm:p-7 rounded-md border border-slate-200 shadow-panel">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-1">
               Submit Citizen General Inquiry
             </h2>
@@ -131,7 +135,7 @@ export const ContactPage: React.FC = () => {
                     setSubject("");
                     setMessage("");
                   }}
-                  className="px-3 py-1.5 text-xs font-semibold text-emerald-900 bg-white border border-emerald-300 rounded hover:bg-emerald-50"
+                  className="min-h-[44px] px-4 py-2 text-xs font-semibold text-emerald-900 bg-white border border-emerald-300 rounded hover:bg-emerald-50"
                 >
                   Send Another Inquiry
                 </button>
@@ -148,7 +152,7 @@ export const ContactPage: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Eleanor Rigby"
-                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    className="w-full px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
@@ -162,7 +166,7 @@ export const ContactPage: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@domain.com"
-                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    className="w-full px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
@@ -176,7 +180,7 @@ export const ContactPage: React.FC = () => {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="e.g. Question regarding Road Authority pothole jurisdiction"
-                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    className="w-full px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
@@ -190,13 +194,13 @@ export const ContactPage: React.FC = () => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Provide details regarding your municipal inquiry..."
-                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
+                    className="w-full px-3 py-2.5 sm:py-2 rounded border border-slate-300 text-xs focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold transition flex items-center justify-center gap-2 shadow-subtle"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold transition flex items-center justify-center gap-2 shadow-subtle"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Transmit Inquiry</span>

@@ -53,14 +53,14 @@ export const Timeline: React.FC<Props> = ({ history }) => {
                     </div>
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <StatusBadge status={event.new_status} />
                         <span className="text-xs text-slate-500">
                           by <strong className="text-slate-700">{event.actor_name}</strong> ({event.actor_role})
                         </span>
                       </div>
-                      <time className="text-xs text-slate-400">{formattedDate}</time>
+                      <time className="text-[11px] sm:text-xs text-slate-400 font-medium shrink-0">{formattedDate}</time>
                     </div>
                     {event.notes && (
                       <div className="mt-2 text-sm text-slate-600 bg-slate-50 rounded-lg p-2.5 border border-slate-100">

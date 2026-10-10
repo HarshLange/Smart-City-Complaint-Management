@@ -268,7 +268,11 @@ export const LandingPage: React.FC = () => {
                       value={trackRef}
                       onChange={(e) => setTrackRef(e.target.value)}
                       required
-                      className="w-full px-3 py-2 rounded border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-md border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                     />
                   </div>
 
@@ -287,7 +291,11 @@ export const LandingPage: React.FC = () => {
                       onChange={(e) => setTrackPin(e.target.value)}
                       required
                       maxLength={8}
-                      className="w-full px-3 py-2 rounded border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-md border border-slate-300 text-sm font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                     />
                     <p className="mt-1 text-[11px] text-slate-500">
                       Issued upon submission to prevent unauthorized snooping on your municipal report.
@@ -296,7 +304,7 @@ export const LandingPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded text-sm font-semibold text-white bg-gov-navy hover:bg-slate-800 transition flex items-center justify-center gap-2 shadow-subtle"
+                    className="w-full min-h-[48px] py-3 rounded-md text-sm font-semibold text-white bg-gov-navy hover:bg-slate-800 active:bg-slate-900 transition flex items-center justify-center gap-2 shadow-subtle touch-manipulation"
                   >
                     <span>Check Live Resolution Progress</span>
                     <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -701,7 +709,7 @@ export const LandingPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setExpandedFaq(isOpen ? null : index)}
-                    className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 font-semibold text-sm text-slate-900 hover:bg-slate-50 transition"
+                    className="w-full text-left px-5 py-4 min-h-[48px] flex items-center justify-between gap-4 font-semibold text-sm text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition touch-manipulation"
                     aria-expanded={isOpen}
                   >
                     <span>{faq.q}</span>

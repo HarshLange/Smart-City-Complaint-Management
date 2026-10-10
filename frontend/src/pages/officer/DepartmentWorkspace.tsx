@@ -175,7 +175,7 @@ export const DepartmentWorkspace: React.FC = () => {
             <button
               type="button"
               onClick={loadData}
-              className="px-3.5 py-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition"
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-[36px] px-4 py-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center justify-center"
             >
               Refresh Queue
             </button>
@@ -184,39 +184,39 @@ export const DepartmentWorkspace: React.FC = () => {
 
         {/* Real Workload Statistics */}
         {summary && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Total Department Tickets
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs">
+            <div className="bg-white p-3.5 sm:p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block text-[11px] sm:text-xs">
+                Total Tickets
               </span>
-              <span className="text-2xl font-bold text-slate-900 mt-1 block">
+              <span className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 block">
                 {summary.total_tickets || 0}
               </span>
             </div>
 
-            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
+            <div className="bg-white p-3.5 sm:p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block text-[11px] sm:text-xs">
                 Pending / Submitted
               </span>
-              <span className="text-2xl font-bold text-blue-700 mt-1 block">
+              <span className="text-xl sm:text-2xl font-bold text-blue-700 mt-1 block">
                 {summary.pending_tickets || 0}
               </span>
             </div>
 
-            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
+            <div className="bg-white p-3.5 sm:p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block text-[11px] sm:text-xs">
                 Active In Progress
               </span>
-              <span className="text-2xl font-bold text-amber-700 mt-1 block">
+              <span className="text-xl sm:text-2xl font-bold text-amber-700 mt-1 block">
                 {summary.in_progress_tickets || 0}
               </span>
             </div>
 
-            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle">
-              <span className="text-slate-500 font-medium uppercase tracking-wider block">
-                Resolved by Department
+            <div className="bg-white p-3.5 sm:p-4 rounded-md border border-slate-200 shadow-subtle">
+              <span className="text-slate-500 font-medium uppercase tracking-wider block text-[11px] sm:text-xs">
+                Resolved
               </span>
-              <span className="text-2xl font-bold text-emerald-700 mt-1 block">
+              <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 block">
                 {summary.resolved_tickets || 0}
               </span>
             </div>
@@ -238,24 +238,24 @@ export const DepartmentWorkspace: React.FC = () => {
         <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <form onSubmit={handleSearch} className="relative flex-1 max-w-md flex gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" aria-hidden="true" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 sm:top-2.5 pointer-events-none" aria-hidden="true" />
               <input
                 type="text"
                 placeholder="Search reference, description, address..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white"
+                className="w-full pl-9 pr-3 py-2.5 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white"
               />
             </div>
             <button
               type="submit"
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold text-slate-700"
+              className="px-4 py-2.5 sm:py-1.5 min-h-[44px] sm:min-h-0 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold text-slate-700"
             >
               Filter
             </button>
           </form>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
             <label htmlFor="officer-status-select" className="text-xs font-medium text-slate-600 shrink-0">
               Filter Queue:
             </label>
@@ -263,7 +263,7 @@ export const DepartmentWorkspace: React.FC = () => {
               id="officer-status-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+              className="w-full sm:w-auto px-3 py-2.5 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
             >
               <option value="ALL">All Department Tickets</option>
               <option value="SUBMITTED">Newly Submitted</option>
@@ -276,7 +276,7 @@ export const DepartmentWorkspace: React.FC = () => {
           </div>
         </div>
 
-        {/* Operational Case Table */}
+        {/* Operational Case Table / Mobile Cards */}
         <div className="bg-white rounded-md border border-slate-200 shadow-panel overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
@@ -292,89 +292,149 @@ export const DepartmentWorkspace: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse gov-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Reference</th>
-                    <th scope="col">Date Logged</th>
-                    <th scope="col">Issue Title</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Priority</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Assigned Officer</th>
-                    <th scope="col" className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {complaints.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/80 transition">
-                      <td className="font-mono text-xs font-semibold text-slate-800 whitespace-nowrap">
-                        {c.reference_number}
-                      </td>
-                      <td className="text-xs text-slate-500 whitespace-nowrap">
-                        {new Date(c.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="max-w-xs truncate font-medium text-slate-900">
-                        {c.title}
-                      </td>
-                      <td>
-                        <CategoryBadge category={c.category} />
-                      </td>
-                      <td className="text-xs font-bold uppercase text-slate-700 whitespace-nowrap">
-                        {c.priority}
-                      </td>
-                      <td>
+            <>
+              {/* Mobile Card Queue View (< md) */}
+              <div className="md:hidden divide-y divide-slate-200">
+                {complaints.map((c) => (
+                  <div key={c.id} className="p-4 space-y-3 bg-white">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="font-mono text-xs font-bold text-slate-900 block">
+                          {c.reference_number}
+                        </span>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">
+                          {new Date(c.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
                         <StatusBadge status={c.status} />
-                      </td>
-                      <td className="text-xs text-slate-600 whitespace-nowrap">
-                        {c.assigned_officer_name || "Unassigned"}
-                      </td>
-                      <td className="text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedComplaint(c);
-                            const allowed = VALID_NEXT_STATUSES[c.status] || [];
-                            setNewStatus(allowed[0]?.status || "");
-                          }}
-                          className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
-                        >
-                          Manage Case
-                        </button>
-                      </td>
+                        <CategoryBadge category={c.category} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">
+                        {c.title}
+                      </h3>
+                      {c.address && (
+                        <p className="text-xs text-slate-600 mt-1 truncate">
+                          📍 {c.address}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 font-medium">Priority: </span>
+                        <span className="font-bold uppercase text-slate-800">{c.priority}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-medium">Officer: </span>
+                        <span className="font-medium text-slate-700">
+                          {c.assigned_officer_name || "Unassigned"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedComplaint(c);
+                        const allowed = VALID_NEXT_STATUSES[c.status] || [];
+                        setNewStatus(allowed[0]?.status || "");
+                      }}
+                      className="w-full min-h-[44px] py-2.5 px-4 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 active:scale-[0.98] border border-blue-200 rounded flex items-center justify-center transition"
+                    >
+                      Manage Case
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse gov-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Reference</th>
+                      <th scope="col">Date Logged</th>
+                      <th scope="col">Issue Title</th>
+                      <th scope="col">Category</th>
+                      <th scope="col">Priority</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Assigned Officer</th>
+                      <th scope="col" className="text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {complaints.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                        <td className="font-mono text-xs font-semibold text-slate-800 whitespace-nowrap">
+                          {c.reference_number}
+                        </td>
+                        <td className="text-xs text-slate-500 whitespace-nowrap">
+                          {new Date(c.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="max-w-xs truncate font-medium text-slate-900">
+                          {c.title}
+                        </td>
+                        <td>
+                          <CategoryBadge category={c.category} />
+                        </td>
+                        <td className="text-xs font-bold uppercase text-slate-700 whitespace-nowrap">
+                          {c.priority}
+                        </td>
+                        <td>
+                          <StatusBadge status={c.status} />
+                        </td>
+                        <td className="text-xs text-slate-600 whitespace-nowrap">
+                          {c.assigned_officer_name || "Unassigned"}
+                        </td>
+                        <td className="text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedComplaint(c);
+                              const allowed = VALID_NEXT_STATUSES[c.status] || [];
+                              setNewStatus(allowed[0]?.status || "");
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded"
+                          >
+                            Manage Case
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
-
       {/* Structured Officer Action Modal */}
       {selectedComplaint && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-case-title"
         >
-          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-4xl w-full p-6 space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-md border border-slate-200 shadow-modal max-w-4xl w-full p-4 sm:p-6 space-y-5 sm:space-y-6 my-4 sm:my-8 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
-              <div>
+            <div className="flex items-start justify-between pb-3 sm:pb-4 border-b border-slate-100">
+              <div className="pr-2">
                 <span className="text-[11px] font-mono text-slate-500 uppercase block">
                   Department Inspection • {selectedComplaint.reference_number}
                 </span>
-                <h3 id="modal-case-title" className="text-lg font-bold text-slate-900 mt-0.5">
+                <h3 id="modal-case-title" className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
                   {selectedComplaint.title}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedComplaint(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded"
+                className="text-slate-400 hover:text-slate-600 min-w-[44px] min-h-[44px] flex items-center justify-center rounded -mr-2 -mt-2"
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
@@ -382,7 +442,7 @@ export const DepartmentWorkspace: React.FC = () => {
             </div>
 
             {/* Case Details & Citizen Evidence */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3">
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
                   Defect Description & Location
@@ -390,7 +450,7 @@ export const DepartmentWorkspace: React.FC = () => {
                 <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded border border-slate-200 whitespace-pre-wrap leading-relaxed">
                   {selectedComplaint.description}
                 </p>
-                <div className="text-xs text-slate-600 space-y-0.5 bg-slate-50 p-3 rounded border border-slate-200">
+                <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded border border-slate-200">
                   <p><strong>Address:</strong> {selectedComplaint.address || "Not specified"}</p>
                   {selectedComplaint.landmark && <p><strong>Landmark:</strong> {selectedComplaint.landmark}</p>}
                   {selectedComplaint.latitude && selectedComplaint.longitude && (
@@ -398,7 +458,7 @@ export const DepartmentWorkspace: React.FC = () => {
                       GPS: {selectedComplaint.latitude.toFixed(5)}, {selectedComplaint.longitude.toFixed(5)}
                     </p>
                   )}
-                  <p className="pt-1 text-slate-500">
+                  <p className="pt-1 text-slate-500 border-t border-slate-200/60 mt-1">
                     Complainant: <strong>{selectedComplaint.citizen_name || "Citizen"}</strong> ({selectedComplaint.citizen_email || "Email verified"})
                   </p>
                 </div>
@@ -431,13 +491,13 @@ export const DepartmentWorkspace: React.FC = () => {
             </div>
 
             {/* Form 1: Status Progression & Resolution Evidence */}
-            <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-4">
+            <div className="bg-slate-50 p-3.5 sm:p-4 rounded border border-slate-200 space-y-4">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-2">
                 Update Ticket Lifecycle Status
               </span>
 
               <form onSubmit={handleUpdateStatus} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="update-status" className="block text-xs font-semibold text-slate-800 mb-1">
                       New Operational Status
@@ -456,7 +516,7 @@ export const DepartmentWorkspace: React.FC = () => {
                           id="update-status"
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
-                          className="w-full px-3 py-2 rounded border border-slate-300 text-xs font-medium bg-white focus:ring-2 focus:ring-blue-700"
+                          className="w-full px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 rounded border border-slate-300 text-xs font-medium bg-white focus:ring-2 focus:ring-blue-700"
                         >
                           <option value="" disabled>-- Select Authorized Next Status --</option>
                           {options.map((opt) => (
@@ -478,7 +538,7 @@ export const DepartmentWorkspace: React.FC = () => {
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
-                      className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border file:border-slate-300 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-100"
+                      className="w-full text-xs text-slate-600 min-h-[44px] sm:min-h-0 file:mr-3 file:py-2 file:px-3 file:rounded file:border file:border-slate-300 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-100"
                     />
                   </div>
                 </div>
@@ -493,7 +553,7 @@ export const DepartmentWorkspace: React.FC = () => {
                     value={statusNotes}
                     onChange={(e) => setStatusNotes(e.target.value)}
                     placeholder="e.g. Asphalt crew completed patch repair. Road re-opened for traffic."
-                    className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
+                    className="w-full px-3 py-2.5 sm:py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                   />
                 </div>
 
@@ -501,7 +561,7 @@ export const DepartmentWorkspace: React.FC = () => {
                   <button
                     type="submit"
                     disabled={actionLoading || !newStatus || newStatus === selectedComplaint.status}
-                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold disabled:opacity-50 transition shadow-subtle"
+                    className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold disabled:opacity-50 transition shadow-subtle flex items-center justify-center"
                   >
                     {actionLoading ? "Saving Status..." : "Apply Status Update"}
                   </button>
@@ -510,7 +570,7 @@ export const DepartmentWorkspace: React.FC = () => {
             </div>
 
             {/* Form 2: Internal Investigation Note */}
-            <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-3">
+            <div className="bg-slate-50 p-3.5 sm:p-4 rounded border border-slate-200 space-y-3">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block border-b border-slate-200 pb-2">
                 Add Officer Investigation Note
               </span>
@@ -521,16 +581,16 @@ export const DepartmentWorkspace: React.FC = () => {
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Record internal findings, material requisitions, or field updates..."
-                  className="w-full px-3 py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
+                  className="w-full px-3 py-2.5 sm:py-2 rounded border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-700"
                 />
 
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer min-h-[44px] sm:min-h-0">
                     <input
                       type="checkbox"
                       checked={noteInternal}
                       onChange={(e) => setNoteInternal(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-700 focus:ring-blue-700"
+                      className="w-4 h-4 rounded border-slate-300 text-blue-700 focus:ring-blue-700"
                     />
                     <span>Mark as Internal Note (hidden from citizen tracking)</span>
                   </label>
@@ -538,7 +598,7 @@ export const DepartmentWorkspace: React.FC = () => {
                   <button
                     type="submit"
                     disabled={noteSubmitting || !noteText.trim()}
-                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-xs font-semibold disabled:opacity-50"
+                    className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-xs font-semibold disabled:opacity-50 flex items-center justify-center"
                   >
                     {noteSubmitting ? "Saving..." : "Record Note"}
                   </button>

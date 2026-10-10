@@ -54,70 +54,70 @@ export const CitizenDashboard: React.FC = () => {
   });
 
   return (
-    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div id="main-content" className="min-h-screen bg-slate-50 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 pb-20 lg:pb-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Service Header & Primary Action Banner */}
-        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-panel flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white p-4 sm:p-6 rounded-md border border-slate-200 shadow-panel flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block">
+            <span className="text-[11px] sm:text-xs font-bold text-blue-700 uppercase tracking-wider block">
               Citizen Portal
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
               Welcome, {user?.full_name || "Citizen"}
             </h1>
-            <p className="text-xs text-slate-600 mt-1 max-w-2xl">
+            <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
               Track the progress of civic issues reported in your neighborhood and review updates from municipal departments.
             </p>
           </div>
           <Link
             to="/report"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle shrink-0"
+            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 transition shadow-subtle shrink-0 touch-manipulation w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             <span>Report a Civic Issue</span>
           </Link>
         </div>
 
-        {/* Compact Status Counts (Operational, not vanity metrics) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
+        {/* Compact Status Counts (3-column responsive banner for thumb ergonomics) */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="bg-white p-3 sm:p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
             <div>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
-                Total Reported
+              <span className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block">
+                Total
               </span>
-              <span className="text-2xl font-bold text-slate-900 mt-0.5 block">
+              <span className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 block">
                 {totalCount}
               </span>
             </div>
-            <div className="w-9 h-9 rounded bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
+            <div className="hidden sm:flex w-9 h-9 rounded bg-slate-100 text-slate-700 items-center justify-center border border-slate-200">
               <FileText className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
+          <div className="bg-white p-3 sm:p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
             <div>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
-                Active / In Progress
+              <span className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block">
+                Active
               </span>
-              <span className="text-2xl font-bold text-amber-700 mt-0.5 block">
+              <span className="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5 block">
                 {inProgressCount}
               </span>
             </div>
-            <div className="w-9 h-9 rounded bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200">
+            <div className="hidden sm:flex w-9 h-9 rounded bg-amber-50 text-amber-700 items-center justify-center border border-amber-200">
               <Clock className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
+          <div className="bg-white p-3 sm:p-4 rounded-md border border-slate-200 shadow-subtle flex items-center justify-between">
             <div>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
-                Resolved & Closed
+              <span className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block">
+                Resolved
               </span>
-              <span className="text-2xl font-bold text-emerald-700 mt-0.5 block">
+              <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-0.5 block">
                 {resolvedCount}
               </span>
             </div>
-            <div className="w-9 h-9 rounded bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+            <div className="hidden sm:flex w-9 h-9 rounded bg-emerald-50 text-emerald-700 items-center justify-center border border-emerald-200">
               <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
             </div>
           </div>
@@ -127,7 +127,7 @@ export const CitizenDashboard: React.FC = () => {
         {error && (
           <div
             role="alert"
-            className="p-4 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-start gap-2.5"
+            className="p-3.5 sm:p-4 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-start gap-2.5"
           >
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{error}</span>
@@ -135,27 +135,27 @@ export const CitizenDashboard: React.FC = () => {
         )}
 
         {/* Filter and Search Bar */}
-        <div className="bg-white p-4 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="bg-white p-3 sm:p-4 rounded-md border border-slate-200 shadow-subtle flex flex-col sm:flex-row gap-2.5 sm:gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" aria-hidden="true" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
               placeholder="Filter by reference, title, or address..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white"
+              className="w-full min-h-[44px] pl-9 pr-3 py-2 rounded-md border border-slate-300 text-xs sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white touch-manipulation"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="status-select" className="text-xs font-medium text-slate-600 shrink-0">
+            <label htmlFor="status-select" className="text-xs font-medium text-slate-600 shrink-0 hidden sm:block">
               Status:
             </label>
             <select
               id="status-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700"
+              className="min-h-[44px] px-3 py-2 rounded-md border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700 w-full sm:w-auto touch-manipulation"
             >
               <option value="ALL">All Statuses ({totalCount})</option>
               <option value="SUBMITTED">Submitted</option>
@@ -177,8 +177,8 @@ export const CitizenDashboard: React.FC = () => {
               <p className="text-xs text-slate-500">Loading your complaint records...</p>
             </div>
           ) : filteredComplaints.length === 0 ? (
-            <div className="p-12 text-center max-w-md mx-auto space-y-3">
-              <div className="w-12 h-12 rounded bg-slate-100 text-slate-400 flex items-center justify-center mx-auto border border-slate-200">
+            <div className="p-8 sm:p-12 text-center max-w-md mx-auto space-y-3">
+              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto border border-slate-200">
                 <FileText className="w-6 h-6" aria-hidden="true" />
               </div>
               <h2 className="text-sm font-bold text-slate-800">No Complaints Found</h2>
@@ -190,7 +190,7 @@ export const CitizenDashboard: React.FC = () => {
               {!searchQuery && statusFilter === "ALL" && (
                 <Link
                   to="/report"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition"
+                  className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 transition touch-manipulation shadow-subtle"
                 >
                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Report an Issue</span>
@@ -237,7 +237,7 @@ export const CitizenDashboard: React.FC = () => {
                         <td className="text-right whitespace-nowrap">
                           <Link
                             to={`/complaints/${c.id}`}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline min-h-[36px] px-2 py-1"
                           >
                             <span>Inspect</span>
                             <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -249,32 +249,42 @@ export const CitizenDashboard: React.FC = () => {
                 </table>
               </div>
 
-              {/* Mobile Card List View */}
+              {/* Mobile Touch-Friendly Card List View */}
               <div className="md:hidden divide-y divide-slate-100">
                 {filteredComplaints.map((c) => (
-                  <div key={c.id} className="p-4 space-y-2">
+                  <div key={c.id} className="p-4 space-y-2.5 bg-white hover:bg-slate-50/50 transition">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-semibold text-slate-800">
+                      <span className="font-mono text-xs font-bold text-slate-900">
                         {c.reference_number}
                       </span>
                       <StatusBadge status={c.status} />
                     </div>
-                    <h2 className="text-sm font-semibold text-slate-900">{c.title}</h2>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+
+                    <h2 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
+                      {c.title}
+                    </h2>
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                       <CategoryBadge category={c.category} />
                       <span>•</span>
                       <span>{new Date(c.created_at).toLocaleDateString()}</span>
+                      {c.department_name && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate max-w-[140px] text-slate-600 font-medium">
+                            {c.department_name}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-                      <span className="text-[11px] text-slate-500">
-                        {c.department_name || "Under Review"}
-                      </span>
+
+                    <div className="pt-2">
                       <Link
                         to={`/complaints/${c.id}`}
-                        className="text-xs font-semibold text-blue-700 hover:underline flex items-center gap-1"
+                        className="w-full min-h-[44px] py-2 px-3 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-xs font-semibold text-blue-700 flex items-center justify-center gap-1.5 touch-manipulation transition shadow-xs"
                       >
-                        <span>View Details</span>
-                        <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                        <span>Inspect Complaint Details</span>
+                        <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                       </Link>
                     </div>
                   </div>

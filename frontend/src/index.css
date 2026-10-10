@@ -11,7 +11,7 @@
     @apply bg-slate-50 text-slate-900 antialiased font-sans min-h-screen selection:bg-blue-100 selection:text-blue-900;
   }
 
-  /* Form control defaults with accessible high contrast borders */
+/* Form control defaults with accessible high contrast borders */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -20,6 +20,7 @@
   select,
   textarea {
     @apply border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600;
+    touch-action: manipulation;
   }
 
   /* Clear focus rings for keyboard navigation */
@@ -44,6 +45,29 @@
 
 .gov-table td {
   @apply text-sm text-slate-800 px-4 py-3 border-b border-slate-100;
+}
+
+/* Mobile Safe-Area utilities */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Touch manipulation utility to prevent 300ms double-tap delay */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS Safari automatic viewport zooming on text inputs */
+@media screen and (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Reduced motion preference respect */

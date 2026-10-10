@@ -85,11 +85,11 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-5 sm:px-8 rounded-md border border-slate-200 shadow-panel space-y-5">
+        <div className="bg-white py-6 sm:py-8 px-4 sm:px-8 rounded-md border border-slate-200 shadow-panel space-y-4 sm:space-y-5">
           {error && (
             <div
               role="alert"
-              className="p-3.5 bg-red-50 border border-red-200 rounded text-xs text-red-800 flex items-start gap-2.5"
+              className="p-3.5 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-start gap-2.5"
             >
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
               <span>{error}</span>
@@ -105,7 +105,7 @@ export const LoginPage: React.FC = () => {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" aria-hidden="true" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none" aria-hidden="true" />
                 <input
                   id="login-email"
                   type="email"
@@ -114,7 +114,7 @@ export const LoginPage: React.FC = () => {
                   required
                   autoComplete="username"
                   placeholder="name@domain.gov"
-                  className="w-full pl-9 pr-3 py-2 rounded border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className="w-full min-h-[44px] pl-9 pr-3 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                 />
               </div>
             </div>
@@ -129,7 +129,7 @@ export const LoginPage: React.FC = () => {
                 </label>
               </div>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" aria-hidden="true" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 pointer-events-none" aria-hidden="true" />
                 <input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
@@ -138,12 +138,12 @@ export const LoginPage: React.FC = () => {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••••••"
-                  className="w-full pl-9 pr-10 py-2 rounded border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
+                  className="w-full min-h-[44px] pl-9 pr-12 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 touch-manipulation"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-700 rounded p-0.5"
+                  className="absolute right-1 top-1 min-h-[40px] min-w-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-700 rounded-md touch-manipulation"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -158,7 +158,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-subtle"
+              className="w-full min-h-[48px] py-2.5 rounded-md text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-subtle touch-manipulation"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -185,7 +185,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full py-2.5 px-4 rounded border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2.5 shadow-subtle transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+            className="w-full min-h-[48px] py-2.5 px-4 rounded-md border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2.5 shadow-subtle transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 touch-manipulation"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -208,10 +208,9 @@ export const LoginPage: React.FC = () => {
             <span>Continue with Google (Citizen Sign-In)</span>
           </button>
 
-
           <div className="text-center text-xs text-slate-600 pt-2 border-t border-slate-100">
             Need a citizen account?{" "}
-            <Link to="/register" className="font-semibold text-blue-700 hover:underline">
+            <Link to="/register" className="font-semibold text-blue-700 hover:underline min-h-[40px] inline-flex items-center touch-manipulation">
               Create Citizen Account
             </Link>
           </div>
