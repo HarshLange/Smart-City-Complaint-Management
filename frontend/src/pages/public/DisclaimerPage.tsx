@@ -44,7 +44,7 @@ export const DisclaimerPage: React.FC = () => {
               1. Automated AI Classification Disclosure
             </h2>
             <p>
-              CivicPulse employs machine learning (EfficientNetV2-S deep neural network) to analyze defect photographs and provide automated department routing suggestions. While trained on thousands of municipal defect images, classification results are heuristic and advisory. Municipal supervisory officers retain absolute discretion to review, reassign, or override automated recommendations.
+              CivicPulse employs machine learning (ResNet18 + BiLSTM + Attention deep neural vision network) to analyze defect photographs and provide automated department routing suggestions. While trained on thousands of municipal defect images, classification results are heuristic and advisory. Municipal supervisory officers retain absolute discretion to review, reassign, or override automated recommendations.
             </p>
           </section>
 

@@ -36,10 +36,10 @@ async def lifespan(app: FastAPI):
         await seed_database(session)
     logger.info("Initial data seeding verified.")
 
-    # 3. Load EfficientNetV2-S model
+    # 3. Load ResNet18 + BiLSTM + Attention model
     try:
         model_manager.load_model()
-        logger.info("EfficientNetV2-S image classifier loaded and ready for inference.")
+        logger.info("%s image classifier loaded and ready for inference.", model_manager.model_name)
     except Exception as e:
         logger.error("Failed to preload ML model on startup: %s", e)
 
@@ -100,7 +100,7 @@ async def health_check():
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT,
         "ai_model_loaded": model_ready,
-        "ai_model_name": "EfficientNetV2-S",
+        "ai_model_name": model_manager.model_name,
         "ai_confidence_threshold": settings.AI_CONFIDENCE_THRESHOLD,
     }
 

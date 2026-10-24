@@ -1,6 +1,10 @@
 {
-  "architecture": "EfficientNetV2-S",
-  "weights": "ImageNet pretrained",
+  "architecture": "ResNet18_BiLSTM_AdditiveAttention",
+  "display_name": "ResNet18 + BiLSTM + Attention",
+  "model_version": "TP100-epoch47",
+  "checkpoint_file": "best_resnet18_bilstm_attention_clean.pt",
+  "raw_checkpoint_file": "best_resnet18_bilstm_attention.pt",
+  "dataset": "TP100",
   "class_names": [
     "damaged_road",
     "garbage",
@@ -15,6 +19,7 @@
     "streetlight_failure": 3,
     "water_leak": 4
   },
+  "num_classes": 5,
   "input_size": [
     224,
     224
@@ -29,7 +34,13 @@
     0.224,
     0.225
   ],
-  "device": "cuda:0",
-  "parameter_count": 20183893,
-  "trainable_parameter_count": 20183893
+  "parameter_count": 12888646,
+  "trainable_parameter_count": 12888646,
+  "best_epoch": 47,
+  "best_val_macro_f1": 0.9986666666666666,
+  "test_accuracy": 0.9979367262723521,
+  "test_macro_f1": 0.9979999833331636,
+  "test_precision_macro": 0.9980110448614992,
+  "test_recall_macro": 0.998,
+  "test_loss": 0.00841123636355543
 }

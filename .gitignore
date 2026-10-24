@@ -85,6 +85,8 @@ logs/
 # -----------------------------------------------------------------------------
 TP100_FULL_WORKING_BACKUP.zip
 TP100_Deployment_and_Report.zip
+ResNet18_BiLSTM_Attention_TP100_Results.zip
+backend/app/ml/weights/backup_efficientnet_v2_s/
 *.zip
 *.tar
 *.tar.gz

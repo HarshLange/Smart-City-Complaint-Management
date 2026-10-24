@@ -15,7 +15,7 @@ def create_test_image_bytes(color=(100, 150, 200), size=(300, 300), format="JPEG
 
 @pytest.mark.asyncio
 async def test_real_model_loaded():
-    """Verify real EfficientNetV2-S model is loaded with 5 output classes."""
+    """Verify real ResNet18 + BiLSTM + Attention model is loaded with 5 output classes."""
     model = model_manager.get_model()
     assert model is not None
     assert len(model_manager.class_names) == 5
@@ -45,8 +45,8 @@ async def test_real_inference_execution():
     img_bytes = create_test_image_bytes()
     result = await run_inference_async(img_bytes)
 
-    assert result["model_name"] == "EfficientNetV2-S"
-    assert result["model_version"] == "TP100-epoch16"
+    assert result["model_name"] == "ResNet18 + BiLSTM + Attention"
+    assert result["model_version"] == "TP100-epoch47"
     assert result["predicted_category"] in model_manager.class_names
     assert 0.0 <= result["confidence_score"] <= 1.0
     assert len(result["all_probabilities"]) == 5

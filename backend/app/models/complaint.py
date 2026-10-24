@@ -107,8 +107,8 @@ class AIPrediction(Base, TimestampMixin):
     complaint_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("complaints.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
-    model_name: Mapped[str] = mapped_column(String(100), default="EfficientNetV2-S", nullable=False)
-    model_version: Mapped[str] = mapped_column(String(50), default="TP100-epoch16", nullable=False)
+    model_name: Mapped[str] = mapped_column(String(100), default="ResNet18 + BiLSTM + Attention", nullable=False)
+    model_version: Mapped[str] = mapped_column(String(50), default="TP100-epoch47", nullable=False)
     predicted_category: Mapped[str] = mapped_column(String(50), nullable=False)
     confidence_score: Mapped[float] = mapped_column(Float, nullable=False)
     all_probabilities: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)

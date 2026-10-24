@@ -180,8 +180,8 @@ class ComplaintService:
             # 7. Persist AI Prediction
             prediction = AIPrediction(
                 complaint_id=complaint.id,
-                model_name=ai_result.get("model_name", "EfficientNetV2-S"),
-                model_version=ai_result.get("model_version", "TP100-epoch16"),
+                model_name=ai_result.get("model_name", "ResNet18 + BiLSTM + Attention"),
+                model_version=ai_result.get("model_version", "TP100-epoch47"),
                 predicted_category=predicted_cat_str,
                 confidence_score=ai_result.get("confidence_score", 0.0),
                 all_probabilities=ai_result.get("all_probabilities", {}),

@@ -1,6 +1,6 @@
 # ==============================================================================
 # CIVICPULSE — GOOGLE CLOUD RUN PRODUCTION BACKEND DOCKERFILE
-# CPU-Optimized FastAPI + PyTorch EfficientNetV2-S Serverless Container
+# CPU-Optimized FastAPI + PyTorch ResNet18-BiLSTM-Attention Serverless Container
 # ==============================================================================
 
 FROM python:3.11-slim-bookworm
@@ -39,8 +39,8 @@ COPY backend/alembic /app/alembic
 COPY backend/alembic.ini /app/alembic.ini
 
 # 4. Verify model checkpoint integrity at container build time
-# Guarantees that the real 78MB weights binary was copied (fails if LFS pointer)
-RUN python -c "from pathlib import Path; p = Path('app/ml/weights/best_model.pt'); assert p.is_file(), 'Checkpoint missing'; assert p.stat().st_size > 50000000, f'Checkpoint too small ({p.stat().st_size} bytes) - ensure git-lfs pull was run'; from app.ml.model import model_manager; model_manager.load_model(); print('Checkpoint integrity verified successfully.')"
+# Guarantees that the real weights binary was copied (fails if LFS pointer)
+RUN python -c "from pathlib import Path; p = Path('app/ml/weights/best_resnet18_bilstm_attention_clean.pt'); assert p.is_file(), 'Checkpoint missing'; assert p.stat().st_size > 40000000, f'Checkpoint too small ({p.stat().st_size} bytes) - ensure git-lfs pull was run'; from app.ml.model import model_manager; model_manager.load_model(); print('Checkpoint integrity verified successfully.')"
 
 # Expose default Cloud Run container port
 EXPOSE 8080

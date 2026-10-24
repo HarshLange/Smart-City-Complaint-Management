@@ -149,7 +149,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       q: "How does the AI classification system work?",
-      a: "When you upload an evidence photo, our trained neural vision model (EfficientNetV2-S) analyzes the image features to identify defect patterns (e.g. asphalt fractures vs. leaking pipes). It automatically routes the ticket to the responsible department. If model confidence is below 80%, the ticket enters an administrative human review queue before dispatch.",
+      a: "When you upload an evidence photo, our trained neural vision model (ResNet18 + BiLSTM + Attention) analyzes the image features to identify defect patterns (e.g. asphalt fractures vs. leaking pipes). It automatically routes the ticket to the responsible department. If model confidence is below 80%, the ticket enters an administrative human review queue before dispatch.",
     },
     {
       q: "How do I track my complaint without an account?",

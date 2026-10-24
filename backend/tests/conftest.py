@@ -40,7 +40,7 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def preload_model():
-    """Ensure the real EfficientNetV2-S model is loaded for testing."""
+    """Ensure the real ResNet18 + BiLSTM + Attention model is loaded for testing."""
     model_manager.load_model()
     return model_manager
 
