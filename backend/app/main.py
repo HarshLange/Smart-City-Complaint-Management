@@ -10,6 +10,7 @@ from app.db.base import Base
 from app.db.seed import seed_database
 from app.db.session import AsyncSessionLocal, engine
 from app.ml.model import model_manager
+from app.ml.nlp.service import nlp_model_manager
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,12 +37,18 @@ async def lifespan(app: FastAPI):
         await seed_database(session)
     logger.info("Initial data seeding verified.")
 
-    # 3. Load ResNet18 + BiLSTM + Attention model
+    # 3. Load ML models: ResNet18 + BiLSTM + Attention (Vision) and TF-IDF + Logistic Regression (NLP)
     try:
         model_manager.load_model()
         logger.info("%s image classifier loaded and ready for inference.", model_manager.model_name)
     except Exception as e:
-        logger.error("Failed to preload ML model on startup: %s", e)
+        logger.error("Failed to preload image ML model on startup: %s", e)
+
+    try:
+        nlp_model_manager.load_model()
+        logger.info("%s NLP text classifier loaded and ready for inference.", nlp_model_manager.model_name)
+    except Exception as e:
+        logger.error("Failed to preload NLP text classifier on startup: %s", e)
 
     yield
 
@@ -95,12 +102,16 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health", tags=["Health"])
 async def health_check():
     model_ready = model_manager._model is not None
+    nlp_ready = nlp_model_manager.is_loaded
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT,
         "ai_model_loaded": model_ready,
         "ai_model_name": model_manager.model_name,
+        "nlp_model_loaded": nlp_ready,
+        "nlp_model_name": nlp_model_manager.model_name,
+        "multimodal_fusion_enabled": True,
         "ai_confidence_threshold": settings.AI_CONFIDENCE_THRESHOLD,
     }
 

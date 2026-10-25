@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
@@ -15,7 +16,9 @@ from app.core.security import (
     generate_tracking_pin,
     hash_tracking_pin,
 )
+from app.ml.fusion import multimodal_fusion_engine
 from app.ml.inference import run_inference_async
+from app.ml.nlp.service import nlp_model_manager
 from app.models.audit import AuditEvent, OfficerNote, StatusHistory
 from app.models.complaint import AIPrediction, Complaint, ComplaintAttachment
 from app.models.enums import AuditActionType, CivicCategory, ComplaintStatus, UserRole
@@ -117,11 +120,20 @@ class ComplaintService:
             plain_pin = generate_tracking_pin()
             hashed_pin = hash_tracking_pin(plain_pin)
 
-            # 4. Execute AI Model Inference
-            ai_result = await run_inference_async(image_bytes)
-            predicted_cat_str = ai_result.get("predicted_category", "other")
-            needs_review = ai_result.get("needs_review", True)
-            suggested_dept_code = ai_result.get("suggested_department_code")
+            # 4. Execute Parallel Multimodal AI Inference (Vision + NLP)
+            vision_task = run_inference_async(image_bytes)
+            nlp_task = nlp_model_manager.predict_text_async(title=title, description=description)
+            vision_result, nlp_result = await asyncio.gather(vision_task, nlp_task)
+
+            # 5. Multimodal Fusion
+            fusion_result = multimodal_fusion_engine.fuse(
+                vision_result=vision_result,
+                nlp_result=nlp_result,
+            )
+
+            predicted_cat_str = fusion_result.get("predicted_category", "other")
+            needs_review = fusion_result.get("needs_review", True)
+            suggested_dept_code = fusion_result.get("suggested_department_code")
 
             # Map predicted string to enum safely
             category_enum = CivicCategory.OTHER
@@ -130,9 +142,13 @@ class ComplaintService:
             except ValueError:
                 category_enum = CivicCategory.OTHER
 
-            # Resolve department from suggested department code
+            disagreement_detected = fusion_result.get("disagreement_detected", False)
+
+            # Resolve department from suggested department code.
+            # If multimodal conflict/disagreement is detected, department assignment is held
+            # unassigned (None) so it goes strictly to the central review queue for manual triage.
             department_id: Optional[str] = None
-            if suggested_dept_code:
+            if suggested_dept_code and not disagreement_detected:
                 dept_res = await db.execute(
                     select(Department).where(Department.code == suggested_dept_code)
                 )
@@ -140,14 +156,14 @@ class ComplaintService:
                 if dept:
                     department_id = dept.id
 
-            # Determine initial complaint status: if low confidence or failed -> UNDER_REVIEW
+            # Determine initial complaint status: if low confidence, disagreement, or failed -> UNDER_REVIEW
             initial_status = ComplaintStatus.SUBMITTED
             if needs_review or not department_id:
                 initial_status = ComplaintStatus.UNDER_REVIEW
             else:
                 initial_status = ComplaintStatus.ASSIGNED
 
-            # 5. Persist Complaint
+            # 6. Persist Complaint
             complaint = Complaint(
                 reference_number=reference_num,
                 tracking_pin_hash=hashed_pin,
@@ -165,7 +181,7 @@ class ComplaintService:
             db.add(complaint)
             await db.flush()
 
-            # 6. Persist Attachment
+            # 7. Persist Attachment
             attachment = ComplaintAttachment(
                 complaint_id=complaint.id,
                 storage_path=storage_path,
@@ -177,21 +193,30 @@ class ComplaintService:
             )
             db.add(attachment)
 
-            # 7. Persist AI Prediction
+            # 8. Persist AI Prediction with full multimodal diagnostic data
+            diagnostic_probs = {
+                "fused": fusion_result.get("all_probabilities", {}),
+                "vision": vision_result.get("all_probabilities", {}),
+                "nlp": nlp_result.get("all_probabilities", {}),
+                "modalities_used": fusion_result.get("modalities_used", []),
+                "disagreement_detected": fusion_result.get("disagreement_detected", False),
+                "fusion_details": fusion_result.get("fusion_details", {}),
+            }
+
             prediction = AIPrediction(
                 complaint_id=complaint.id,
-                model_name=ai_result.get("model_name", "ResNet18 + BiLSTM + Attention"),
-                model_version=ai_result.get("model_version", "TP100-epoch47"),
+                model_name=fusion_result.get("model_name", "Multimodal Fusion"),
+                model_version=fusion_result.get("model_version", "Fusion-v1"),
                 predicted_category=predicted_cat_str,
-                confidence_score=ai_result.get("confidence_score", 0.0),
-                all_probabilities=ai_result.get("all_probabilities", {}),
+                confidence_score=fusion_result.get("confidence_score", 0.0),
+                all_probabilities=diagnostic_probs,
                 suggested_department_code=suggested_dept_code or "",
-                processing_status=ai_result.get("processing_status", "FAILED"),
-                error_message=ai_result.get("error_message"),
+                processing_status=fusion_result.get("processing_status", "FAILED"),
+                error_message=vision_result.get("error_message") or nlp_result.get("error_message"),
             )
             db.add(prediction)
 
-            # 8. Record Initial Status History
+            # 9. Record Initial Status History
             history = StatusHistory(
                 complaint_id=complaint.id,
                 previous_status=ComplaintStatus.SUBMITTED,
@@ -199,11 +224,11 @@ class ComplaintService:
                 actor_id=user_id,
                 actor_name="Citizen Submission System",
                 actor_role="CITIZEN",
-                notes="Initial submission registered and processed by AI classification engine.",
+                notes="Initial submission registered and processed by multimodal AI classification engine.",
             )
             db.add(history)
 
-            # 9. Record Audit Event
+            # 10. Record Audit Event
             audit = AuditEvent(
                 entity_type="COMPLAINT",
                 entity_id=complaint.id,
@@ -212,9 +237,11 @@ class ComplaintService:
                 details={
                     "reference_number": reference_num,
                     "ai_predicted_category": predicted_cat_str,
-                    "ai_confidence": ai_result.get("confidence_score"),
+                    "ai_confidence": fusion_result.get("confidence_score"),
                     "status": initial_status.value,
                     "needs_review": needs_review,
+                    "modalities_used": fusion_result.get("modalities_used"),
+                    "disagreement_detected": fusion_result.get("disagreement_detected"),
                 },
                 ip_address=client_ip,
             )

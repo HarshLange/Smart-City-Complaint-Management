@@ -1,0 +1,186 @@
+{
+  "model_architecture": "Logistic Regression",
+  "vectorizer_type": "TfidfVectorizer (word 1-2 ngrams, sublinear_tf)",
+  "vocabulary_size": 1196,
+  "target_classes": [
+    "damaged_road",
+    "garbage",
+    "pothole",
+    "streetlight_failure",
+    "water_leak"
+  ],
+  "class_to_idx": {
+    "damaged_road": 0,
+    "garbage": 1,
+    "pothole": 2,
+    "streetlight_failure": 3,
+    "water_leak": 4
+  },
+  "model_file": "nlp_classifier.joblib",
+  "vectorizer_file": "nlp_vectorizer.joblib",
+  "model_size_kb": 47.64,
+  "vectorizer_size_kb": 31.62,
+  "total_artifact_size_kb": 79.26,
+  "dataset_name": "Public_Grievance_Dataset (hackermango)",
+  "dataset_records_used": 282,
+  "validation_metrics": {
+    "model_name": "Logistic Regression",
+    "split": "validation",
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0,
+    "confusion_matrix": [
+      [
+        17,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        31,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        13,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        17,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        15
+      ]
+    ],
+    "per_class": {
+      "damaged_road": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "garbage": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 31
+      },
+      "pothole": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      "streetlight_failure": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "water_leak": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 15
+      }
+    },
+    "train_duration_ms": 26.85,
+    "latency_mean_ms": 0.153,
+    "latency_p95_ms": 0.235
+  },
+  "test_metrics": {
+    "model_name": "Logistic Regression",
+    "split": "test",
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0,
+    "confusion_matrix": [
+      [
+        17,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        32,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        13,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        17,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        15
+      ]
+    ],
+    "per_class": {
+      "damaged_road": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "garbage": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 32
+      },
+      "pothole": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 13
+      },
+      "streetlight_failure": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 17
+      },
+      "water_leak": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 15
+      }
+    }
+  },
+  "training_timestamp": "2026-10-24T21:02:38Z"
+}
