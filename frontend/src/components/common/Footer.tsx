@@ -12,8 +12,10 @@ import {
   Shield,
   ShieldAlert,
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 export const Footer: React.FC = () => {
+  const { isAuthenticated } = useAuthStore();
   return (
     <footer className="bg-gov-navy text-slate-300 border-t border-slate-700/80 mt-auto font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-24 lg:py-12 pb-safe">
@@ -32,7 +34,7 @@ export const Footer: React.FC = () => {
             </p>
             <ul className="space-y-2 text-xs pt-1">
               <li>
-                <Link to="/report" className="hover:text-white transition py-1 inline-block">
+                <Link to={isAuthenticated ? "/report" : "/login?redirect=%2Freport"} className="hover:text-white transition py-1 inline-block">
                   • Report a Public Issue
                 </Link>
               </li>

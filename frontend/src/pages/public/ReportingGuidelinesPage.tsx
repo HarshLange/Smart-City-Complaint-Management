@@ -9,8 +9,10 @@ import {
   MapPin,
   ShieldAlert,
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 export const ReportingGuidelinesPage: React.FC = () => {
+  const { isAuthenticated } = useAuthStore();
   return (
     <div id="main-content" className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -122,7 +124,7 @@ export const ReportingGuidelinesPage: React.FC = () => {
 
         <div className="pt-2 text-center">
           <Link
-            to="/report"
+            to={isAuthenticated ? "/report" : "/login?redirect=%2Freport"}
             className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs font-semibold shadow-subtle transition inline-flex items-center gap-2"
           >
             <Camera className="w-4 h-4" />

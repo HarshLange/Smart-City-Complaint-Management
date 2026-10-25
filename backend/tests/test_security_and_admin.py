@@ -72,6 +72,12 @@ async def test_admin_can_provision_officer_and_view_analytics(client: AsyncClien
 @pytest.mark.asyncio
 async def test_upload_validation_rejects_non_image_payloads(client: AsyncClient):
     """Test that text files or fake images are rejected by Pillow verification."""
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "citizen@smartcity.gov", "password": "Citizen@SmartCity2026!"},
+    )
+    token = login_res.json()["access_token"]
+
     fake_file = b"This is a text file pretending to be an image."
     files = {"file": ("malicious.jpg", fake_file, "image/jpeg")}
 
@@ -79,6 +85,7 @@ async def test_upload_validation_rejects_non_image_payloads(client: AsyncClient)
         "/api/v1/complaints/",
         data={"title": "Attack attempt", "description": "Fake file upload payload"},
         files=files,
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 400
     assert res.json()["error_code"] in ["INVALID_IMAGE_BYTES", "INVALID_IMAGE_FORMAT", "FILE_CORRUPT"]

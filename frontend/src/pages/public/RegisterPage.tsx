@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   Building2,
@@ -16,6 +16,8 @@ import { useAuthStore } from "../../store/authStore";
 export const RegisterPage: React.FC = () => {
   const { register } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -40,7 +42,12 @@ export const RegisterPage: React.FC = () => {
         password,
         phone_number: phoneNumber.trim() || undefined,
       });
-      navigate("/dashboard");
+      const isSafeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//");
+      if (isSafeRedirect) {
+        navigate(redirect);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       setError(
         err.message || "Registration was unsuccessful. Please check your information."
@@ -204,7 +211,10 @@ export const RegisterPage: React.FC = () => {
 
           <div className="text-center text-xs text-slate-600 pt-2 border-t border-slate-100">
             Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-blue-700 hover:underline min-h-[40px] inline-flex items-center touch-manipulation">
+            <Link
+              to={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"}
+              className="font-semibold text-blue-700 hover:underline min-h-[40px] inline-flex items-center touch-manipulation"
+            >
               Sign In
             </Link>
           </div>

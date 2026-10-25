@@ -29,9 +29,11 @@ import {
   Truck,
   Users,
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [trackRef, setTrackRef] = useState("");
   const [trackPin, setTrackPin] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
@@ -207,7 +209,7 @@ export const LandingPage: React.FC = () => {
               {/* Primary Call-to-Action Buttons */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                 <Link
-                  to="/report"
+                  to={isAuthenticated ? "/report" : "/login?redirect=%2Freport"}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle focus-visible:ring-2 focus-visible:ring-blue-700"
                 >
                   <Camera className="w-4 h-4" aria-hidden="true" />

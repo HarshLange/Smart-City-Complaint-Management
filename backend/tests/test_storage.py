@@ -4,7 +4,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 from PIL import Image
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
+from app.models.user import User
 from app.config import settings
 from app.core.exceptions import BadRequestException, StorageException
 from app.services.complaint_service import complaint_service
@@ -290,6 +292,8 @@ async def test_path_traversal_attempts_rejected():
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_db_failure_after_upload_triggers_safe_cleanup(db_session):
+    user_res = await db_session.execute(select(User).where(User.email == "citizen@smartcity.gov"))
+    citizen = user_res.scalar_one()
     valid_bytes = make_valid_image_bytes("JPEG")
 
     # Patch db_session.commit to simulate database failure
@@ -308,6 +312,7 @@ async def test_db_failure_after_upload_triggers_safe_cleanup(db_session):
                 image_bytes=valid_bytes,
                 filename="pothole.jpg",
                 content_type="image/jpeg",
+                user_id=citizen.id,
             )
 
         # Confirm compensating cleanup was triggered for the exact uploaded path
@@ -319,6 +324,8 @@ async def test_db_failure_after_upload_triggers_safe_cleanup(db_session):
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_cleanup_failure_is_logged_without_masking_original_error(db_session, caplog):
+    user_res = await db_session.execute(select(User).where(User.email == "citizen@smartcity.gov"))
+    citizen = user_res.scalar_one()
     valid_bytes = make_valid_image_bytes("JPEG")
     original_db_error = SQLAlchemyError("Database foreign key constraint violation")
 
@@ -338,6 +345,7 @@ async def test_cleanup_failure_is_logged_without_masking_original_error(db_sessi
                     image_bytes=valid_bytes,
                     filename="leak.jpg",
                     content_type="image/jpeg",
+                    user_id=citizen.id,
                 )
 
             # Original error is preserved and raised to caller

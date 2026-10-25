@@ -13,8 +13,8 @@ def make_test_image() -> bytes:
 
 
 @pytest.mark.asyncio
-async def test_scenario_1_anonymous_submission_and_public_tracking(client: AsyncClient):
-    """Scenario 1: Anonymous citizen reports issue, gets tracking credentials, and tracks anonymously."""
+async def test_scenario_1_unauthenticated_rejection_and_authenticated_submission_with_public_tracking(client: AsyncClient):
+    """Scenario 1: Unauthenticated submission is rejected (401); authenticated citizen succeeds; public tracks via PIN."""
     img_bytes = make_test_image()
     files = {"file": ("anonymous_issue.jpg", img_bytes, "image/jpeg")}
     form_data = {
@@ -23,7 +23,27 @@ async def test_scenario_1_anonymous_submission_and_public_tracking(client: Async
         "address": "5th Street & Elm Avenue",
     }
 
-    res = await client.post("/api/v1/complaints/", data=form_data, files=files)
+    # 1. Unauthenticated submission must fail with HTTP 401
+    unauth_res = await client.post("/api/v1/complaints/", data=form_data, files=files)
+    assert unauth_res.status_code == 401
+
+    # 2. Authenticate as citizen
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "citizen@smartcity.gov", "password": "Citizen@SmartCity2026!"},
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+    citizen_user = login_res.json()["user"]
+
+    # 3. Authenticated citizen submits complaint
+    files = {"file": ("drain_issue.jpg", img_bytes, "image/jpeg")}
+    res = await client.post(
+        "/api/v1/complaints/",
+        data=form_data,
+        files=files,
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert res.status_code == 201
     created = res.json()
 
@@ -34,7 +54,15 @@ async def test_scenario_1_anonymous_submission_and_public_tracking(client: Async
     assert "ai_prediction" in created
     assert created["ai_prediction"] is not None
 
-    # Track publicly without any authorization header
+    # Verify user association in complaint detail
+    detail_res = await client.get(
+        f"/api/v1/complaints/{created['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert detail_res.status_code == 200
+    assert detail_res.json()["user_id"] == citizen_user["id"]
+
+    # 4. Track publicly without any authorization header
     track_res = await client.post(
         "/api/v1/complaints/track",
         json={"reference_number": ref_num, "tracking_pin": tracking_pin},
@@ -74,6 +102,12 @@ async def test_scenario_2_citizen_auth_and_ownership_isolation(client: AsyncClie
 @pytest.mark.asyncio
 async def test_scenario_3_ai_classification_transparency_in_response(client: AsyncClient):
     """Scenario 3: Response contains full multimodal diagnostics for transparent UI rendering."""
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "citizen@smartcity.gov", "password": "Citizen@SmartCity2026!"},
+    )
+    token = login_res.json()["access_token"]
+
     img_bytes = make_test_image()
     files = {"file": ("road_crater.jpg", img_bytes, "image/jpeg")}
     form_data = {
@@ -81,7 +115,12 @@ async def test_scenario_3_ai_classification_transparency_in_response(client: Asy
         "description": "Major deep asphalt pothole damaged car tire on the main highway road.",
     }
 
-    res = await client.post("/api/v1/complaints/", data=form_data, files=files)
+    res = await client.post(
+        "/api/v1/complaints/",
+        data=form_data,
+        files=files,
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert res.status_code == 201
     created = res.json()
 
@@ -101,6 +140,12 @@ async def test_scenario_3_ai_classification_transparency_in_response(client: Asy
 @pytest.mark.asyncio
 async def test_scenario_4_and_5_multimodal_disagreement_routed_to_review_queue(client: AsyncClient):
     """Scenario 4 & 5: Disagreement between vision and text sets status to UNDER_REVIEW and routes to review queue."""
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "citizen@smartcity.gov", "password": "Citizen@SmartCity2026!"},
+    )
+    token = login_res.json()["access_token"]
+
     # Synthetic image will classify as damaged_road or streetlight, while text explicitly describes water leak
     img_bytes = make_test_image()
     files = {"file": ("conflict_test.jpg", img_bytes, "image/jpeg")}
@@ -109,7 +154,12 @@ async def test_scenario_4_and_5_multimodal_disagreement_routed_to_review_queue(c
         "description": "High pressure clean drinking water main pipe burst flooding basement and street pipeline leak.",
     }
 
-    res = await client.post("/api/v1/complaints/", data=form_data, files=files)
+    res = await client.post(
+        "/api/v1/complaints/",
+        data=form_data,
+        files=files,
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert res.status_code == 201
     created = res.json()
 
@@ -145,6 +195,12 @@ async def test_scenario_4_and_5_multimodal_disagreement_routed_to_review_queue(c
 @pytest.mark.asyncio
 async def test_scenario_6_admin_authoritative_override_promotes_complaint(client: AsyncClient):
     """Scenario 6: Admin reviews flagged complaint and overrides to correct department."""
+    cit_login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "citizen@smartcity.gov", "password": "Citizen@SmartCity2026!"},
+    )
+    cit_token = cit_login.json()["access_token"]
+
     # 1. Create a complaint that requires review
     img_bytes = make_test_image()
     files = {"file": ("override_target.jpg", img_bytes, "image/jpeg")}
@@ -153,7 +209,12 @@ async def test_scenario_6_admin_authoritative_override_promotes_complaint(client
         "description": "Main water pipeline broke and clean water is gushing out rapidly.",
     }
 
-    res = await client.post("/api/v1/complaints/", data=form_data, files=files)
+    res = await client.post(
+        "/api/v1/complaints/",
+        data=form_data,
+        files=files,
+        headers={"Authorization": f"Bearer {cit_token}"},
+    )
     assert res.status_code == 201
     created = res.json()
     complaint_id = created["id"]

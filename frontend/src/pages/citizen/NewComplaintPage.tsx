@@ -23,7 +23,7 @@ import { CivicCategory, ComplaintCreateResult } from "../../types";
 
 export const NewComplaintPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -135,6 +135,11 @@ export const NewComplaintPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      navigate("/login?redirect=%2Freport");
+      return;
+    }
+
     if (!file) {
       setSubmitError("A photograph of the defect is required for verification.");
       return;
@@ -180,6 +185,17 @@ export const NewComplaintPage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center py-10 px-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium text-slate-500">Verifying session...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="main-content" className="min-h-screen bg-slate-50 py-5 sm:py-10 px-3 sm:px-6 lg:px-8 pb-20 lg:pb-10">
       <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6">
@@ -207,8 +223,39 @@ export const NewComplaintPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Success Modal / Confirmation Receipt */}
-        {successData ? (
+        {/* Unauthenticated View: Citizen Authentication Required */}
+        {!isAuthenticated ? (
+          <div className="bg-white rounded-md border border-slate-200 shadow-panel p-6 sm:p-10 text-center space-y-5 max-w-lg mx-auto my-6 animate-in fade-in duration-200">
+            <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center mx-auto border border-blue-200 shadow-xs">
+              <Lock className="w-7 h-7 text-blue-700" aria-hidden="true" />
+            </div>
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider block">
+                Citizen Authentication Required
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Sign in to report a municipal issue
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                To ensure accountability and associate grievances with verified citizen accounts, you must sign in or create an account before registering a complaint.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link
+                to="/login?redirect=%2Freport"
+                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-md text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center justify-center touch-manipulation"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register?redirect=%2Freport"
+                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-md text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center justify-center touch-manipulation"
+              >
+                Create Account
+              </Link>
+            </div>
+          </div>
+        ) : successData ? (
           <div className="bg-white rounded-md border-2 border-emerald-500 shadow-modal p-4 sm:p-8 space-y-5 sm:space-y-6 animate-in fade-in duration-200">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">

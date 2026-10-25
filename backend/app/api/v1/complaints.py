@@ -147,10 +147,15 @@ async def submit_complaint(
     longitude: Optional[float] = Form(None),
     address: Optional[str] = Form(None),
     landmark: Optional[str] = Form(None),
-    current_user: Optional[User] = Depends(get_optional_user),
+    current_user: User = Depends(require_citizen),
     db: AsyncSession = Depends(get_db),
 ):
-    """Register a new complaint, execute AI classification on photograph, and route to department."""
+    """Register a new complaint, execute AI classification on photograph, and route to department.
+    
+    Mandatory Authentication Enforced:
+    Only authenticated citizens (or administrators) can register complaints.
+    The created complaint is strictly associated with current_user.id.
+    """
     client_ip = get_client_ip(request)
     submission_rate_limiter.check(client_ip)
 
@@ -165,7 +170,7 @@ async def submit_complaint(
         image_bytes=image_bytes,
         filename=filename,
         content_type=content_type,
-        user_id=current_user.id if current_user else None,
+        user_id=current_user.id,
         latitude=latitude,
         longitude=longitude,
         address=address,

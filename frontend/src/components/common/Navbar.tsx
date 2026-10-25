@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
                 Overview
               </Link>
               <Link
-                to="/report"
+                to={isAuthenticated ? "/report" : "/login?redirect=%2Freport"}
                 className={`px-3 py-2 rounded text-sm font-medium transition ${
                   location.pathname === "/report"
                     ? "text-blue-700 bg-blue-50/80 font-semibold border-b-2 border-blue-700"
@@ -335,7 +335,7 @@ export const Navbar: React.FC = () => {
                 Overview
               </Link>
               <Link
-                to="/report"
+                to={isAuthenticated ? "/report" : "/login?redirect=%2Freport"}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center px-3 py-2.5 rounded-md text-xs font-semibold min-h-[44px] transition touch-manipulation ${
                   location.pathname === "/report"

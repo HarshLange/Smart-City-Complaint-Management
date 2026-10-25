@@ -10,6 +10,7 @@ from app.core.exceptions import (
     EntityNotFoundException,
     ForbiddenException,
     InvalidTransitionException,
+    UnauthorizedException,
 )
 from app.core.security import (
     generate_complaint_reference,
@@ -98,14 +99,30 @@ class ComplaintService:
         image_bytes: bytes,
         filename: str,
         content_type: str,
-        user_id: Optional[str] = None,
+        user_id: str,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         address: Optional[str] = None,
         landmark: Optional[str] = None,
         client_ip: Optional[str] = None,
     ) -> Tuple[Complaint, str]:
-        """Create a complaint, store image in private storage, run AI classification, and route to department."""
+        """Create a complaint, store image in private storage, run AI classification, and route to department.
+        
+        Mandatory User Association Invariant:
+        Every newly registered complaint MUST be associated with a valid, active user account.
+        Anonymous submissions are rejected before image storage or AI inference begins.
+        """
+        # 0. Enforce mandatory user association
+        if not user_id or not isinstance(user_id, str) or not user_id.strip():
+            raise UnauthorizedException("An authenticated citizen account is required to register a complaint.")
+
+        user_res = await db.execute(select(User).where(User.id == user_id.strip()))
+        user_obj = user_res.scalar_one_or_none()
+        if not user_obj:
+            raise UnauthorizedException("The citizen account associated with this request does not exist.")
+        if not user_obj.is_active:
+            raise ForbiddenException("The citizen account has been deactivated.")
+
         # 1. Validate image payload
         extension = storage_service.validate_image(image_bytes, filename, content_type)
 

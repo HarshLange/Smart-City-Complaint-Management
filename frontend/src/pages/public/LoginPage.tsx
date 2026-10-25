@@ -25,6 +25,8 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
 
+  const redirect = searchParams.get("redirect");
+
   React.useEffect(() => {
     const errParam = searchParams.get("error") || searchParams.get("error_description");
     if (errParam) {
@@ -37,7 +39,8 @@ export const LoginPage: React.FC = () => {
     const supabaseUrl = rawSupabaseUrl
       ? rawSupabaseUrl.replace(/\/+$/, "")
       : "https://sagibkveeaciobapkgrt.supabase.co";
-    const callbackUrl = encodeURIComponent(`${window.location.origin}/auth/callback`);
+    const callbackPath = redirect ? `/auth/callback?redirect=${encodeURIComponent(redirect)}` : "/auth/callback";
+    const callbackUrl = encodeURIComponent(`${window.location.origin}${callbackPath}`);
     window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${callbackUrl}`;
   };
 
@@ -47,8 +50,8 @@ export const LoginPage: React.FC = () => {
     setError(null);
     try {
       const user = await login({ email, password });
-      const redirect = searchParams.get("redirect");
-      if (redirect) {
+      const isSafeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//");
+      if (isSafeRedirect) {
         navigate(redirect);
       } else if (user.role === "ADMIN") {
         navigate("/admin");
@@ -213,7 +216,10 @@ export const LoginPage: React.FC = () => {
 
           <div className="text-center text-xs text-slate-600 pt-2 border-t border-slate-100">
             Need a citizen account?{" "}
-            <Link to="/register" className="font-semibold text-blue-700 hover:underline min-h-[40px] inline-flex items-center touch-manipulation">
+            <Link
+              to={redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"}
+              className="font-semibold text-blue-700 hover:underline min-h-[40px] inline-flex items-center touch-manipulation"
+            >
               Create Citizen Account
             </Link>
           </div>

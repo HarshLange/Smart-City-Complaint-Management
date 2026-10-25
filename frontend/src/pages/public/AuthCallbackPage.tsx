@@ -71,9 +71,20 @@ export const AuthCallbackPage: React.FC = () => {
             // Browser history security restriction fallback
           }
 
+          // Check for safe redirect destination
+          const redirect = searchParams.get("redirect");
+          const isSafeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//");
+          const target = isSafeRedirect
+            ? redirect
+            : result.user.role === "ADMIN"
+            ? "/admin"
+            : result.user.role === "OFFICER"
+            ? "/workspace"
+            : "/dashboard";
+
           setStatus("success");
           setTimeout(() => {
-            navigate("/dashboard", { replace: true });
+            navigate(target, { replace: true });
           }, 500);
           return;
         }
