@@ -3,6 +3,7 @@ import {
   CivicCategory,
   Complaint,
   ComplaintAttachment,
+  ComplaintCreateResult,
   ComplaintPublicTracking,
   ComplaintStatus,
   Department,
@@ -108,19 +109,8 @@ class ApiClient {
   }
 
   // Complaint Endpoints
-  async submitComplaint(formData: FormData): Promise<{
-    id: string;
-    reference_number: string;
-    tracking_pin: string;
-    title: string;
-    status: ComplaintStatus;
-    category: CivicCategory;
-    department_name: string;
-    confidence_score: number;
-    needs_review: boolean;
-    message: string;
-  }> {
-    return this.request("/complaints/", {
+  async submitComplaint(formData: FormData): Promise<ComplaintCreateResult> {
+    return this.request<ComplaintCreateResult>("/complaints/", {
       method: "POST",
       body: formData,
     });

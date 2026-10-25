@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 import { CategoryBadge } from "../../components/common/CategoryBadge";
+import { AIClassificationAnalysis } from "../../components/complaint/AIClassificationAnalysis";
 import { useAuthStore } from "../../store/authStore";
-import { CivicCategory } from "../../types";
+import { CivicCategory, ComplaintCreateResult } from "../../types";
 
 export const NewComplaintPage: React.FC = () => {
   const navigate = useNavigate();
@@ -74,13 +75,7 @@ export const NewComplaintPage: React.FC = () => {
   }, [title, description, address, landmark]);
 
   // Success Confirmation State
-  const [successData, setSuccessData] = useState<{
-    reference_number: string;
-    tracking_pin: string;
-    category: CivicCategory;
-    department_name: string;
-    confidence_score: number | null;
-  } | null>(null);
+  const [successData, setSuccessData] = useState<ComplaintCreateResult | null>(null);
 
   const [pinCopied, setPinCopied] = useState(false);
   const [refCopied, setRefCopied] = useState(false);
@@ -159,14 +154,7 @@ export const NewComplaintPage: React.FC = () => {
       if (landmark.trim()) formData.append("landmark", landmark.trim());
 
       const res = await api.submitComplaint(formData);
-
-      setSuccessData({
-        reference_number: res.reference_number,
-        tracking_pin: res.tracking_pin,
-        category: res.category,
-        department_name: res.department_name || "Review Queue",
-        confidence_score: res.confidence_score,
-      });
+      setSuccessData(res);
 
       // Clear draft on successful submission
       try {
@@ -291,18 +279,13 @@ export const NewComplaintPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Department Assignment Notification */}
-            <div className="bg-slate-50 rounded-md border border-slate-200 p-3.5 sm:p-4 text-xs space-y-2">
-              <span className="font-bold text-slate-800 uppercase tracking-wider block text-[11px]">
-                Preliminary System Routing
-              </span>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <CategoryBadge category={successData.category} />
-                <span className="text-slate-600">
-                  Assigned to: <strong className="text-slate-900">{successData.department_name}</strong>
-                </span>
-              </div>
-            </div>
+            {/* Multimodal AI Classification & Routing Transparency Analysis */}
+            <AIClassificationAnalysis
+              prediction={successData.ai_prediction}
+              complaintStatus={successData.status}
+              departmentName={successData.department_name}
+              departmentCode={successData.department_code}
+            />
 
             {/* Next Action Links */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2">

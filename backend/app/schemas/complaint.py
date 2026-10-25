@@ -67,6 +67,7 @@ class ComplaintCreateResponse(BaseModel):
     confidence_score: Optional[float] = None
     needs_review: bool
     message: str
+    ai_prediction: Optional[AIPredictionResponse] = None
 
 
 class ComplaintDetailResponse(BaseModel):

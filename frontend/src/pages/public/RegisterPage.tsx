@@ -51,38 +51,41 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div id="main-content" className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div id="main-content" className="min-h-[calc(100vh-12rem)] flex flex-col justify-center py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <Link
           to="/"
-          className="inline-flex items-center gap-2.5 mb-4 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded p-1"
+          className="inline-flex items-center gap-2.5 mb-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded p-1"
         >
-          <div className="w-10 h-10 rounded bg-gov-navy flex items-center justify-center text-white border border-slate-700">
+          <div className="w-10 h-10 rounded bg-gov-navy flex items-center justify-center text-white border border-slate-700 shadow-xs">
             <Building2 className="w-5 h-5 text-blue-200" aria-hidden="true" />
           </div>
           <span className="font-bold text-xl text-slate-900 tracking-tight">CivicPulse</span>
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold uppercase tracking-wider mb-1.5">
+          Citizen Portal Registration
+        </div>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
           Create Citizen Account
         </h1>
-        <p className="mt-1 text-xs text-slate-600">
-          Register to view complaint history, receive direct updates, and manage civic reports.
+        <p className="mt-0.5 text-xs text-slate-600 max-w-sm mx-auto">
+          Register to view complaint history, receive direct resolution updates, and track civic issues.
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-6 sm:py-8 px-4 sm:px-8 rounded-md border border-slate-200 shadow-panel space-y-4 sm:space-y-5">
+      <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-5 sm:py-6 px-4 sm:px-7 rounded-md border border-slate-200 shadow-panel space-y-4">
           {error && (
             <div
               role="alert"
-              className="p-3.5 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-start gap-2.5"
+              className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-start gap-2.5"
             >
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label
                 htmlFor="reg-name"
@@ -186,7 +189,7 @@ export const RegisterPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full min-h-[48px] py-2.5 rounded-md text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-subtle touch-manipulation"
+              className="w-full min-h-[46px] py-2.5 rounded-md text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-subtle touch-manipulation"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -33,15 +33,7 @@ export const TrackComplaintPage: React.FC = () => {
   const [complaint, setComplaint] = useState<ComplaintPublicTracking | null>(null);
   const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
 
-  // Enforce authenticated-only tracking
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      const returnPath = encodeURIComponent(location.pathname + location.search);
-      navigate(`/login?redirect=${returnPath}`, { replace: true });
-    }
-  }, [authLoading, isAuthenticated, location, navigate]);
-
-  // Load user's complaints for convenient reference selection
+  // Load user's complaints for convenient reference selection if authenticated
   useEffect(() => {
     if (isAuthenticated && user?.role === "CITIZEN") {
       api

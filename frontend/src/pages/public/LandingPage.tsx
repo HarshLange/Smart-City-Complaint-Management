@@ -91,8 +91,8 @@ export const LandingPage: React.FC = () => {
     },
     {
       step: "02",
-      title: "AI Analysis & Routing",
-      desc: "Our neural computer vision model classifies the issue severity and routes the ticket to the jurisdiction authority without clerical delays.",
+      title: "Multimodal AI Triage & Routing",
+      desc: "Our dual-modality AI engine combines ResNet18+BiLSTM+Attention visual classification with NLP text analysis to categorize defects and route verified issues directly to the appropriate department.",
       icon: Sparkles,
     },
     {

@@ -52,18 +52,58 @@ export interface ComplaintAttachment {
   access_url?: string;
 }
 
+export interface AIPredictionFusionDetails {
+  mode?: string;
+  reason?: string;
+  resolved_to?: string;
+  vision_category?: string;
+  vision_confidence?: number;
+  nlp_category?: string;
+  nlp_confidence?: number;
+  weights?: { vision: number; nlp: number };
+  matched_terms?: string[];
+  text_is_empty?: boolean;
+  text_is_oov?: boolean;
+  vision_status?: string;
+}
+
+export interface AIPredictionProbabilities {
+  fused?: Record<string, number>;
+  vision?: Record<string, number>;
+  nlp?: Record<string, number>;
+  modalities_used?: string[];
+  disagreement_detected?: boolean;
+  fusion_details?: AIPredictionFusionDetails;
+  [key: string]: any;
+}
+
 export interface AIPrediction {
   id: string;
   model_name: string;
   model_version: string;
   predicted_category: string;
   confidence_score: number;
-  all_probabilities: Record<string, number>;
+  all_probabilities: AIPredictionProbabilities;
   suggested_department_code: string;
   processing_status: string;
   error_message?: string | null;
   is_overridden: boolean;
   override_reason?: string | null;
+}
+
+export interface ComplaintCreateResult {
+  id: string;
+  reference_number: string;
+  tracking_pin: string;
+  title: string;
+  status: ComplaintStatus;
+  category: CivicCategory;
+  department_code?: string | null;
+  department_name?: string | null;
+  confidence_score?: number | null;
+  needs_review: boolean;
+  message: string;
+  ai_prediction?: AIPrediction | null;
 }
 
 export interface StatusHistory {

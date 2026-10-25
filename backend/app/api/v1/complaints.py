@@ -176,6 +176,22 @@ async def submit_complaint(
     needs_review = (complaint.status == ComplaintStatus.UNDER_REVIEW)
     conf_score = complaint.ai_prediction.confidence_score if complaint.ai_prediction else 0.0
 
+    ai_pred = None
+    if complaint.ai_prediction:
+        ai_pred = AIPredictionResponse(
+            id=complaint.ai_prediction.id,
+            model_name=complaint.ai_prediction.model_name,
+            model_version=complaint.ai_prediction.model_version,
+            predicted_category=complaint.ai_prediction.predicted_category,
+            confidence_score=complaint.ai_prediction.confidence_score,
+            all_probabilities=complaint.ai_prediction.all_probabilities,
+            suggested_department_code=complaint.ai_prediction.suggested_department_code,
+            processing_status=complaint.ai_prediction.processing_status,
+            error_message=complaint.ai_prediction.error_message,
+            is_overridden=complaint.ai_prediction.is_overridden,
+            override_reason=complaint.ai_prediction.override_reason,
+        )
+
     return ComplaintCreateResponse(
         id=complaint.id,
         reference_number=complaint.reference_number,
@@ -188,6 +204,7 @@ async def submit_complaint(
         confidence_score=conf_score,
         needs_review=needs_review,
         message="Complaint submitted successfully. Please preserve your Reference Number and Tracking PIN for tracking.",
+        ai_prediction=ai_pred,
     )
 
 

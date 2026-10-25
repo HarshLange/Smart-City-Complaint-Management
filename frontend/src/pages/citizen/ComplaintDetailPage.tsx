@@ -20,6 +20,7 @@ import { CategoryBadge } from "../../components/common/CategoryBadge";
 import { SecureEvidenceImage } from "../../components/common/SecureEvidenceImage";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { Timeline } from "../../components/common/Timeline";
+import { AIClassificationAnalysis } from "../../components/complaint/AIClassificationAnalysis";
 import { useAuthStore } from "../../store/authStore";
 import { Complaint } from "../../types";
 
@@ -255,6 +256,14 @@ export const ComplaintDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* AI Classification & Multimodal Routing Analysis */}
+            <AIClassificationAnalysis
+              prediction={complaint.ai_prediction}
+              complaintStatus={complaint.status}
+              departmentName={complaint.department_name}
+              departmentCode={complaint.department_code}
+            />
 
             {/* Resolution Notice & Evidence (When Resolved) */}
             {(complaint.resolution_notes || evidenceAttachment) && (

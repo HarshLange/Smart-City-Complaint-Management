@@ -5,6 +5,7 @@ import {
   Building2,
   Check,
   ChevronDown,
+  LayoutDashboard,
   LogOut,
   Menu,
   Shield,
@@ -230,6 +231,35 @@ export const Navbar: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Dedicated Role-Aware Workspace Button */}
+                  {user.role === "CITIZEN" && (
+                    <Link
+                      to="/dashboard"
+                      className="px-3 py-1.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center gap-1.5 shrink-0"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Citizen Dashboard</span>
+                    </Link>
+                  )}
+                  {user.role === "OFFICER" && (
+                    <Link
+                      to="/workspace"
+                      className="px-3 py-1.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center gap-1.5 shrink-0"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Officer Workspace</span>
+                    </Link>
+                  )}
+                  {user.role === "ADMIN" && (
+                    <Link
+                      to="/admin"
+                      className="px-3 py-1.5 rounded text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition shadow-subtle flex items-center gap-1.5 shrink-0"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Admin Console</span>
+                    </Link>
+                  )}
 
                   {/* Authenticated User Identity */}
                   <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
