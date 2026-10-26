@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from app.api.v1 import admin, auth, complaints, department, files, notifications
 from app.config import settings
 from app.core.exceptions import AppException
@@ -98,15 +99,29 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Health check endpoint
+# Health check endpoints (root /health and versioned /api/v1/health)
 @app.get("/health", tags=["Health"])
+@app.get(f"{settings.API_V1_PREFIX}/health", tags=["Health"])
 async def health_check():
+    """Health check endpoint probing database connectivity and AI inference model readiness."""
     model_ready = model_manager._model is not None
     nlp_ready = nlp_model_manager.is_loaded
-    return {
-        "status": "healthy",
+    db_status = "connected"
+    http_status = status.HTTP_200_OK
+
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.warning("Health check database probe failed: %s", e)
+        db_status = "unavailable"
+        http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    payload = {
+        "status": "healthy" if db_status == "connected" else "degraded",
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT,
+        "database": db_status,
         "ai_model_loaded": model_ready,
         "ai_model_name": model_manager.model_name,
         "nlp_model_loaded": nlp_ready,
@@ -114,6 +129,7 @@ async def health_check():
         "multimodal_fusion_enabled": True,
         "ai_confidence_threshold": settings.AI_CONFIDENCE_THRESHOLD,
     }
+    return JSONResponse(status_code=http_status, content=payload)
 
 
 # Mount API Routers

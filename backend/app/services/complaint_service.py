@@ -552,6 +552,7 @@ class ComplaintService:
             .options(
                 selectinload(Complaint.citizen),
                 selectinload(Complaint.department),
+                selectinload(Complaint.assigned_officer),
                 selectinload(Complaint.attachments),
                 selectinload(Complaint.ai_prediction),
                 selectinload(Complaint.status_history),

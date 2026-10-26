@@ -3,6 +3,7 @@ from fastapi import Cookie, Depends, Header
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.core.security import decode_access_token
 from app.db.session import get_db
@@ -31,7 +32,9 @@ async def get_current_user(
         raise UnauthorizedException("Invalid, expired, or malformed authentication token")
 
     user_id = str(payload["sub"])
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User).options(selectinload(User.department)).where(User.id == user_id)
+    )
     user = result.scalar_one_or_none()
 
     # Safely extract email from top-level claims or user_metadata
@@ -43,7 +46,9 @@ async def get_current_user(
 
     # If user not found by ID, attempt lookup by email (e.g. pre-existing email account)
     if not user and email:
-        res_email = await db.execute(select(User).where(User.email == email))
+        res_email = await db.execute(
+            select(User).options(selectinload(User.department)).where(User.email == email)
+        )
         user = res_email.scalar_one_or_none()
 
     # If user is authenticated via Supabase but profile row doesn't exist, auto-provision Citizen profile
@@ -111,7 +116,9 @@ async def get_optional_user(
         return None
 
     user_id = str(payload["sub"])
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User).options(selectinload(User.department)).where(User.id == user_id)
+    )
     user = result.scalar_one_or_none()
 
     email = (
@@ -121,7 +128,9 @@ async def get_optional_user(
     ).strip().lower()
 
     if not user and email:
-        res_email = await db.execute(select(User).where(User.email == email))
+        res_email = await db.execute(
+            select(User).options(selectinload(User.department)).where(User.email == email)
+        )
         user = res_email.scalar_one_or_none()
 
     aud = payload.get("aud")

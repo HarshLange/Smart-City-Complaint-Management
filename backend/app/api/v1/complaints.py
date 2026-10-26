@@ -50,7 +50,12 @@ class ReopenComplaintRequest(BaseModel):
 
 
 def complaint_to_detail_response(complaint: Complaint, show_internal_notes: bool = False) -> ComplaintDetailResponse:
-    """Format full complaint detail response."""
+    """Format full complaint detail response with defensive attribute access to prevent MissingGreenlet."""
+    raw_attachments = (
+        complaint.attachments
+        if "attachments" in complaint.__dict__ and complaint.attachments is not None
+        else []
+    )
     attachments = [
         ComplaintAttachmentResponse(
             id=att.id,
@@ -62,25 +67,35 @@ def complaint_to_detail_response(complaint: Complaint, show_internal_notes: bool
             created_at=att.created_at,
             access_url=f"/api/v1/files/download?path={att.storage_path}",
         )
-        for att in complaint.attachments
+        for att in raw_attachments
     ]
 
     ai_pred = None
-    if complaint.ai_prediction:
+    raw_ai = (
+        complaint.ai_prediction
+        if "ai_prediction" in complaint.__dict__
+        else None
+    )
+    if raw_ai:
         ai_pred = AIPredictionResponse(
-            id=complaint.ai_prediction.id,
-            model_name=complaint.ai_prediction.model_name,
-            model_version=complaint.ai_prediction.model_version,
-            predicted_category=complaint.ai_prediction.predicted_category,
-            confidence_score=complaint.ai_prediction.confidence_score,
-            all_probabilities=complaint.ai_prediction.all_probabilities,
-            suggested_department_code=complaint.ai_prediction.suggested_department_code,
-            processing_status=complaint.ai_prediction.processing_status,
-            error_message=complaint.ai_prediction.error_message,
-            is_overridden=complaint.ai_prediction.is_overridden,
-            override_reason=complaint.ai_prediction.override_reason,
+            id=raw_ai.id,
+            model_name=raw_ai.model_name,
+            model_version=raw_ai.model_version,
+            predicted_category=raw_ai.predicted_category,
+            confidence_score=raw_ai.confidence_score,
+            all_probabilities=raw_ai.all_probabilities,
+            suggested_department_code=raw_ai.suggested_department_code,
+            processing_status=raw_ai.processing_status,
+            error_message=raw_ai.error_message,
+            is_overridden=raw_ai.is_overridden,
+            override_reason=raw_ai.override_reason,
         )
 
+    raw_history = (
+        complaint.status_history
+        if "status_history" in complaint.__dict__ and complaint.status_history is not None
+        else []
+    )
     history = [
         StatusHistoryResponse(
             id=h.id,
@@ -91,9 +106,14 @@ def complaint_to_detail_response(complaint: Complaint, show_internal_notes: bool
             notes=h.notes,
             created_at=h.created_at,
         )
-        for h in complaint.status_history
+        for h in raw_history
     ]
 
+    raw_notes = (
+        complaint.officer_notes
+        if "officer_notes" in complaint.__dict__ and complaint.officer_notes is not None
+        else []
+    )
     notes = [
         OfficerNoteResponse(
             id=n.id,
@@ -102,9 +122,25 @@ def complaint_to_detail_response(complaint: Complaint, show_internal_notes: bool
             is_internal=n.is_internal,
             created_at=n.created_at,
         )
-        for n in complaint.officer_notes
+        for n in raw_notes
         if show_internal_notes or not n.is_internal
     ]
+
+    dept_name = None
+    dept_code = None
+    if "department" in complaint.__dict__ and complaint.department:
+        dept_name = complaint.department.name
+        dept_code = complaint.department.code
+
+    cit_name = "Anonymous Citizen"
+    cit_email = None
+    if "citizen" in complaint.__dict__ and complaint.citizen:
+        cit_name = complaint.citizen.full_name or "Anonymous Citizen"
+        cit_email = complaint.citizen.email
+
+    assigned_name = None
+    if "assigned_officer" in complaint.__dict__ and complaint.assigned_officer:
+        assigned_name = complaint.assigned_officer.full_name
 
     return ComplaintDetailResponse(
         id=complaint.id,
@@ -123,13 +159,13 @@ def complaint_to_detail_response(complaint: Complaint, show_internal_notes: bool
         created_at=complaint.created_at,
         updated_at=complaint.updated_at,
         department_id=complaint.department_id,
-        department_name=complaint.department.name if complaint.department else None,
-        department_code=complaint.department.code if complaint.department else None,
+        department_name=dept_name,
+        department_code=dept_code,
         user_id=complaint.user_id,
-        citizen_name=complaint.citizen.full_name if complaint.citizen else "Anonymous Citizen",
-        citizen_email=complaint.citizen.email if complaint.citizen else None,
+        citizen_name=cit_name,
+        citizen_email=cit_email,
         assigned_officer_id=complaint.assigned_officer_id,
-        assigned_officer_name=complaint.assigned_officer.full_name if complaint.assigned_officer else None,
+        assigned_officer_name=assigned_name,
         attachments=attachments,
         ai_prediction=ai_pred,
         status_history=history,
@@ -179,10 +215,12 @@ async def submit_complaint(
     )
 
     needs_review = (complaint.status == ComplaintStatus.UNDER_REVIEW)
-    conf_score = complaint.ai_prediction.confidence_score if complaint.ai_prediction else 0.0
+    conf_score = 0.0
+    if "ai_prediction" in complaint.__dict__ and complaint.ai_prediction:
+        conf_score = complaint.ai_prediction.confidence_score
 
     ai_pred = None
-    if complaint.ai_prediction:
+    if "ai_prediction" in complaint.__dict__ and complaint.ai_prediction:
         ai_pred = AIPredictionResponse(
             id=complaint.ai_prediction.id,
             model_name=complaint.ai_prediction.model_name,
@@ -197,6 +235,12 @@ async def submit_complaint(
             override_reason=complaint.ai_prediction.override_reason,
         )
 
+    dept_code = None
+    dept_name = "Review Queue"
+    if "department" in complaint.__dict__ and complaint.department:
+        dept_code = complaint.department.code
+        dept_name = complaint.department.name
+
     return ComplaintCreateResponse(
         id=complaint.id,
         reference_number=complaint.reference_number,
@@ -204,8 +248,8 @@ async def submit_complaint(
         title=complaint.title,
         status=complaint.status,
         category=complaint.category,
-        department_code=complaint.department.code if complaint.department else None,
-        department_name=complaint.department.name if complaint.department else "Review Queue",
+        department_code=dept_code,
+        department_name=dept_name,
         confidence_score=conf_score,
         needs_review=needs_review,
         message="Complaint submitted successfully. Please preserve your Reference Number and Tracking PIN for tracking.",
@@ -237,15 +281,19 @@ async def track_complaint_publicly(
             notes=h.notes,
             created_at=h.created_at,
         )
-        for h in complaint.status_history
+        for h in (complaint.status_history if "status_history" in complaint.__dict__ and complaint.status_history else [])
     ]
+
+    dept_name = "Assigned to Review"
+    if "department" in complaint.__dict__ and complaint.department:
+        dept_name = complaint.department.name
 
     return ComplaintPublicTrackingResponse(
         reference_number=complaint.reference_number,
         title=complaint.title,
         status=complaint.status,
         category=complaint.category,
-        department_name=complaint.department.name if complaint.department else "Assigned to Review",
+        department_name=dept_name,
         priority=complaint.priority,
         address_summary=complaint.address[:100] if complaint.address else None,
         landmark=complaint.landmark,
@@ -267,7 +315,9 @@ async def get_my_complaints(
         .where(Complaint.user_id == current_user.id)
         .order_by(desc(Complaint.created_at))
         .options(
+            selectinload(Complaint.citizen),
             selectinload(Complaint.department),
+            selectinload(Complaint.assigned_officer),
             selectinload(Complaint.attachments),
             selectinload(Complaint.ai_prediction),
             selectinload(Complaint.status_history),

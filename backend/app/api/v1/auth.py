@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.core.dependencies import get_current_user, get_db
 from app.core.exceptions import (
@@ -104,7 +105,7 @@ async def login(
     login_rate_limiter.check(client_ip)
 
     result = await db.execute(
-        select(User).where(User.email == data.email.lower())
+        select(User).options(selectinload(User.department)).where(User.email == data.email.lower())
     )
     user = result.scalar_one_or_none()
 

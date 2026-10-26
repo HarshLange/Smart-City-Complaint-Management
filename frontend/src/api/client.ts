@@ -306,6 +306,25 @@ class ApiClient {
     return URL.createObjectURL(blob);
   }
 
+  // System Health
+  async getHealth(): Promise<{
+    status: string;
+    database: string;
+    service: string;
+    environment: string;
+    ai_model_loaded: boolean;
+    nlp_model_loaded: boolean;
+  }> {
+    return this.request<{
+      status: string;
+      database: string;
+      service: string;
+      environment: string;
+      ai_model_loaded: boolean;
+      nlp_model_loaded: boolean;
+    }>("/health");
+  }
+
   // Notifications
   async getNotifications(): Promise<NotificationItem[]> {
     return this.request<NotificationItem[]>("/notifications/");

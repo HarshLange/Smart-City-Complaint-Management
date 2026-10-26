@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -9,6 +9,7 @@ import {
   FileText,
   Filter,
   Plus,
+  RefreshCw,
   Search,
 } from "lucide-react";
 import { api } from "../../api/client";
@@ -26,14 +27,24 @@ export const CitizenDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
+  const loadComplaints = useCallback(() => {
     setLoading(true);
+    setError(null);
     api
       .getMyComplaints()
-      .then(setComplaints)
-      .catch((err) => setError(err.message || "Failed to load complaints"))
+      .then((data) => {
+        setComplaints(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err.message || "Failed to load complaints");
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadComplaints();
+  }, [loadComplaints]);
 
   const totalCount = complaints.length;
   const inProgressCount = complaints.filter((c) =>
@@ -86,7 +97,7 @@ export const CitizenDashboard: React.FC = () => {
                 Total
               </span>
               <span className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 block">
-                {totalCount}
+                {error && !loading ? "—" : loading ? "..." : totalCount}
               </span>
             </div>
             <div className="hidden sm:flex w-9 h-9 rounded bg-slate-100 text-slate-700 items-center justify-center border border-slate-200">
@@ -100,7 +111,7 @@ export const CitizenDashboard: React.FC = () => {
                 Active
               </span>
               <span className="text-xl sm:text-2xl font-bold text-amber-700 mt-0.5 block">
-                {inProgressCount}
+                {error && !loading ? "—" : loading ? "..." : inProgressCount}
               </span>
             </div>
             <div className="hidden sm:flex w-9 h-9 rounded bg-amber-50 text-amber-700 items-center justify-center border border-amber-200">
@@ -114,7 +125,7 @@ export const CitizenDashboard: React.FC = () => {
                 Resolved
               </span>
               <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-0.5 block">
-                {resolvedCount}
+                {error && !loading ? "—" : loading ? "..." : resolvedCount}
               </span>
             </div>
             <div className="hidden sm:flex w-9 h-9 rounded bg-emerald-50 text-emerald-700 items-center justify-center border border-emerald-200">
@@ -123,14 +134,27 @@ export const CitizenDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert with Retry Action */}
         {error && (
           <div
             role="alert"
-            className="p-3.5 sm:p-4 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-start gap-2.5"
+            className="p-3.5 sm:p-4 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-subtle"
           >
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
-            <span>{error}</span>
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-red-900">Backend Communication Issue</p>
+                <p className="mt-0.5 text-red-700">{error}</p>
+              </div>
+            </div>
+            <button
+              onClick={loadComplaints}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-red-800 bg-red-100 hover:bg-red-200 active:bg-red-300 transition shrink-0 touch-manipulation disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
+              <span>Retry Connection</span>
+            </button>
           </div>
         )}
 
@@ -157,7 +181,7 @@ export const CitizenDashboard: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="min-h-[44px] px-3 py-2 rounded-md border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-700 w-full sm:w-auto touch-manipulation"
             >
-              <option value="ALL">All Statuses ({totalCount})</option>
+              <option value="ALL">All Statuses ({error && !loading ? "—" : totalCount})</option>
               <option value="SUBMITTED">Submitted</option>
               <option value="UNDER_REVIEW">Under Review</option>
               <option value="ASSIGNED">Assigned</option>
@@ -175,6 +199,23 @@ export const CitizenDashboard: React.FC = () => {
             <div className="p-12 text-center">
               <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
               <p className="text-xs text-slate-500">Loading your complaint records...</p>
+            </div>
+          ) : error ? (
+            <div className="p-8 sm:p-12 text-center max-w-md mx-auto space-y-3">
+              <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
+                <AlertCircle className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <h2 className="text-sm font-bold text-slate-800">Unable to Load Complaint Records</h2>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {error}
+              </p>
+              <button
+                onClick={loadComplaints}
+                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 transition touch-manipulation shadow-subtle"
+              >
+                <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Retry Connection</span>
+              </button>
             </div>
           ) : filteredComplaints.length === 0 ? (
             <div className="p-8 sm:p-12 text-center max-w-md mx-auto space-y-3">
